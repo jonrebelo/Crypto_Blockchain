@@ -11,7 +11,10 @@ class BlockHeader:
         self.blockHash = ''
 
     def mine(self):
+        #Check blockHash for leading 0s
         while (self.blockHash[0:4]) != '0000':
             #combine and pass into hash function. converts non-strings into strings, then convert to hex.
             self.blockHash = hash256((str(self.version) + self.PrevBlockHash + self.merkleRoot + str(self.timestamp)
-                    + self.bits + str(self.nonce)).encode()).hex
+                    + self.bits + str(self.nonce)).encode()).hex()
+            self.nonce += 1
+            print(f"Mining Started {self.nonce}", end = '\r')
