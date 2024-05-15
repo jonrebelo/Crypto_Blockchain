@@ -26,19 +26,19 @@ class Blockchain:
 
 #create the first block
     def GenesisBlock(self):
-        BlockHeight = 0
-        prevBlockHash = zero_hash
-        self.addBlock(BlockHeight, prevBlockHash)
+        block_height = 0
+        prev_block_hash = zero_hash
+        self.addBlock(block_height, prev_block_hash)
 
 #create subsequent blocks
-    def addBlock(self, BlockHeight, prevBlockHash):
+    def addBlock(self, block_height, prev_block_hash):
         timestamp = int(time.time())
-        Transaction = f"""{BlockHeight} units have been sent"""
+        Transaction = f"""{block_height} units have been sent"""
         merkleRoot = hash256(Transaction.encode()).hex()
         bits = 'ffff001f'
-        blockheader = BlockHeader(version, prevBlockHash, merkleRoot, timestamp, bits)
+        blockheader = BlockHeader(version, prev_block_hash, merkleRoot, timestamp, bits)
         blockheader.mine()
-        self.write_on_disk([Block(BlockHeight, 1, blockheader.__dict__, 1, Transaction).__dict__])
+        self.write_on_disk([Block(block_height, 1, blockheader.__dict__, 1, Transaction).__dict__])
         
 #Add new blocks to the chain
     def main(self):
@@ -46,11 +46,11 @@ class Blockchain:
             #Locate last block
             lastBlock = self.fetch_last_block()
             #Add 1 to the last block height
-            BlockHeight = lastBlock["Height"] + 1
+            block_height = lastBlock["Height"] + 1
             #Retrieve the last block hash
-            prevBlockHash = lastBlock["BlockHeader"]["blockHash"]
+            prev_block_hash = lastBlock["BlockHeader"]["blockHash"]
             #pass to addBlock method
-            self.addBlock(BlockHeight, prevBlockHash)
+            self.addBlock(block_height, prev_block_hash)
 
 if __name__ == "__main__":
     blockchain = Blockchain()

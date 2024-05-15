@@ -1,9 +1,9 @@
 from Blockchain.Backend.util.util import hash256
 
 class BlockHeader:
-    def __init__(self, version, PrevBlockHash, merkleRoot, timestamp, bits):
+    def __init__(self, version, prev_block_hash, merkleRoot, timestamp, bits):
         self.version = version
-        self.PrevBlockHash = PrevBlockHash
+        self.prev_block_hash = prev_block_hash
         self.merkleRoot = merkleRoot
         self.timestamp = timestamp
         self.bits = bits
@@ -14,7 +14,7 @@ class BlockHeader:
         #Check blockHash for leading 0s
         while (self.blockHash[0:4]) != '0000':
             #combine and pass into hash function. converts non-strings into strings, then convert to hex.
-            self.blockHash = hash256((str(self.version) + self.PrevBlockHash + self.merkleRoot + str(self.timestamp)
+            self.blockHash = hash256((str(self.version) + self.prev_block_hash + self.merkleRoot + str(self.timestamp)
                     + self.bits + str(self.nonce)).encode()).hex()
             self.nonce += 1
             print(f"Mining Started {self.nonce}", end = '\r')
