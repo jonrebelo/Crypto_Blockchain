@@ -5,7 +5,7 @@ from Blockchain.Backend.util.util import int_to_little_endian, bytes_needed, dec
 
 
 
-zero_hash = b'\0' * 32
+zero_hash = b"\0" * 32
 reward = 50
 
 miner_private_key = '51256644610767104174880828410988796911200594082524157987306154111069280366397'
@@ -69,16 +69,17 @@ class Tx:
         
         return True
     
+    
     def to_dict(self):
         """
         Convert Coinbase Transaction
         - Convert prev_tx Hash in hex from bytes
         - Convert block_height in hex from Script signature
         """
-
+    
         if self.is_coinbase():
             self.tx_ins[0].prev_tx = self.tx_ins[0].prev_tx.hex()
-            self.tx_ins[0].script_sig.cmd[0] = little_endian_to_int(self.tx_ins[0].script_sig.cmds[0])
+            self.tx_ins[0].script_sig.cmds[0] = little_endian_to_int(self.tx_ins[0].script_sig.cmds[0])
             self.tx_ins[0].script_sig = self.tx_ins[0].script_sig.__dict__
 
         self.tx_ins[0] = self.tx_ins[0].__dict__
@@ -94,7 +95,7 @@ class Tx:
         self.tx_outs[0] = self.tx_outs[0].__dict__
 
         return self.__dict__
-
+       
 
 
 
