@@ -15,7 +15,7 @@ version = 1
 #Create the blockchain
 class Blockchain:
     def __init__(self):
-        self.GenesisBlock()
+        pass
 
     def write_on_disk (self, block):
         blockchaindb = BlockchainDB()
@@ -42,11 +42,14 @@ class Blockchain:
         bits = 'ffff001f'
         blockheader = BlockHeader(version, prev_block_hash, merkleRoot, timestamp, bits)
         blockheader.mine()
-        
+        print(f"Block {block_height} mined successfully with Nonce value {blockheader.nonce}")
         self.write_on_disk([Block(block_height, 1, blockheader.__dict__, 1, coinbase_tx.to_dict()).__dict__])
         
 #Add new blocks to the chain
     def main(self):
+        lastBlock = self.fetch_last_block()
+        if lastBlock is None:
+            self.GenesisBlock()
         while True:
             #Locate last block
             lastBlock = self.fetch_last_block()
