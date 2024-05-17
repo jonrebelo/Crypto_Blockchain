@@ -2,6 +2,7 @@ import sys
 sys.path.append('F:/00_Github/Crypto_Blockchain')
 from Blockchain.Backend.core.EllepticCurve.EllepticCurve import Sha256Point
 from Blockchain.Backend.util.util import hash160, hash256
+from Blockchain.Backend.core.database.database import AccountDB
 import secrets
 
 
@@ -61,9 +62,13 @@ class account:
 
         public_address = prefix + result
 
-        print(f"Private key is {private_key}")
-        print(f"Public Address is {public_address}")
+        self.private_key = private_key
+        self.public_address = public_address
+
+        print(f"Private key is {self.private_key}")
+        print(f"Public Address is {self.public_address}")
 
 if __name__ == '__main__':
     acct = account()
     acct.createKeys()
+    AccountDB().write([acct.__dict__])
