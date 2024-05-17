@@ -1,5 +1,5 @@
 from Blockchain.Backend.core.script import Script
-from Blockchain.Backend.util.util import int_to_little_endian, bytes_needed, decode_base58, little_endian_to_int
+from Blockchain.Backend.util.util import int_to_little_endian, bytes_needed, decode_base58, little_endian_to_int, encode_varint, hash256
 
 
 
@@ -28,8 +28,10 @@ class Coinbase_Tx:
         target_h160 = decode_base58(miner_address)
         target_script = Script.p2pkh_script(target_h160)
         tx_outs.append(Tx_Out(amount = target_amount, script_pubkey= target_script))
+        coin_base_tx = Tx(1, tx_ins, tx_outs, 0)
+        coin_base_tx.TxId = coin_base_tx.id()
 
-        return Tx(1, tx_ins, tx_outs, 0)
+        return coin_base_tx
 
 class Tx:
     """
@@ -48,6 +50,37 @@ class Tx:
         self.tx_ins = tx_ins
         self.tx_outs = tx_outs
         self.locktime = locktime
+    
+    def id(self):
+        """Readable Tx ID"""
+        return self.hash().hex()
+
+    def hash(self):
+        """Return the hash of the transaction. Reverse Order [::-1]"""
+        return hash256(self.serialize())[::-1]
+
+    def serialize(self):
+        """Convert Tx inputs into byte format"""
+        #Convert version to little endian
+        result = int_to_little_endian(self.version, 4)
+
+        #Check how many transaction inputs there are
+        result+= encode_varint(len(self.tx_ins))
+
+        #Loop through all transaction inputs
+        for tx_in in self.tx_ins:
+            result += tx_in.serialize()
+
+        #Same for transaction outputs
+        result += encode_varint(len(self.tx_outs))
+        
+        for tx_out in self.tx_outs:
+            result += tx_out.serialize()
+
+        #Convert locktime to little endian
+        result += int_to_little_endian(self.locktime, 4)
+
+        return result
     
     def is_coinbase(self):
         """
@@ -122,6 +155,14 @@ class Tx_In:
 
         self.sequence = sequence
 
+    def serialize(self):
+        """Convert Tx inputs into byte format"""
+        result = self.prev_tx[::-1]
+        result += int_to_little_endian(self.prev_index, 4)
+        result += self.script_sig.serialize()
+        result += int_to_little_endian(self.sequence, 4)
+        return result
+
 class Tx_Out:
     """
     The Tx_Out class represents a transaction output.
@@ -135,3 +176,9 @@ class Tx_Out:
         """
         self.amount = amount
         self.script_pubkey = script_pubkey
+
+    def serialize(self):
+        """Convert Tx inputs into byte format"""
+        result = int_to_little_endian(self.amount, 8)
+        result += self.script_pubkey.serialize()
+        return result
