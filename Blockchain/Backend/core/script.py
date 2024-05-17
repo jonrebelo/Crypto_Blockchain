@@ -35,9 +35,9 @@ class Script:
                 
                 result += cmd
 
-        #get the length of the wntire thing        
+        #get the length of the entire thing        
         total = len(result)
-        
+
         #encode_varint the total length
         return encode_varint(total) + result
 
