@@ -40,3 +40,16 @@ def decode_base58(s):
     
     return combined[1:-4]
 
+def encode_varint(i):
+    """Enncodes integers as a varint
+    Determines the amount of bytes required to represent a hexical number"""
+    if i < 0xfd:
+        return bytes([i])
+    elif i < 0x10000:
+        return b'\xfd' + int_to_little_endian(i, 2)
+    elif i < 0x100000000:
+        return b'\xfe' + int_to_little_endian(i, 4)
+    elif i < 0x10000000000000000:
+        return b'\xff' + int_to_little_endian(i, 8)
+    else:
+        raise ValueError(f'integer too large: {i}')
