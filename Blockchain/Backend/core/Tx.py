@@ -8,8 +8,8 @@ from Blockchain.Backend.util.util import int_to_little_endian, bytes_needed, dec
 zero_hash = b"\0" * 32
 reward = 50
 
-miner_private_key = '51256644610767104174880828410988796911200594082524157987306154111069280366397'
-miner_address = '1JzV4Su53uenm6Jimij7RCdfquJRMSu4HA'
+miner_private_key = '49190780511027130330696391407676493615547676779410269489938157581909610769221'
+miner_address = '1LHVXFSmNTPd3wKgjrZKeYwoesyPqaaGnd'
 
 class Coinbase_Tx:
     def __init__(self, block_height):
