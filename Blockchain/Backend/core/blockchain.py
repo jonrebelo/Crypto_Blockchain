@@ -38,7 +38,7 @@ class Blockchain:
         coinbase_instance = Coinbase_Tx(block_height)
         coinbase_tx = coinbase_instance.Coinbase_Transaction()
 
-        merkleRoot = ''
+        merkleRoot = coinbase_tx.TxId
         bits = 'ffff001f'
         blockheader = BlockHeader(version, prev_block_hash, merkleRoot, timestamp, bits)
         blockheader.mine()
