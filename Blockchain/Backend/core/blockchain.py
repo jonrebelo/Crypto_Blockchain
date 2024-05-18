@@ -77,7 +77,7 @@ if __name__ == "__main__":
         MemPool = manager.dict()
 
         #Start the frontend on a separate process
-        webapp = Process(target=main, args=(utxos,))
+        webapp = Process(target=main, args=(utxos, MemPool))
         webapp.start()
         
         blockchain = Blockchain(utxos, MemPool)
