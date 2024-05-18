@@ -102,8 +102,9 @@ class send_crypto:
         if self.sufficient_balance:
             self.tx_outs = self.prepare_tx_out()
             self.tx_obj = Tx(1, self.tx_ins, self.tx_outs, 0)
+            self.tx_obj.TxId = self.tx_obj.id()
             self.sign_tx()
-            return True
+            return self.tx_obj
         
         return False
 
