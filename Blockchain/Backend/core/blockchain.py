@@ -16,8 +16,9 @@ zero_hash = '0' * 64
 version = 1
 #Create the blockchain
 class Blockchain:
-    def __init__(self, utxos):
+    def __init__(self, utxos, MemPool):
         self.utxos = utxos
+        self.MemPool = MemPool
 
     def write_on_disk (self, block):
         blockchaindb = BlockchainDB()
@@ -73,10 +74,11 @@ if __name__ == "__main__":
     #Create a dictionary to store the UTXOs
     with Manager() as manager:
         utxos = manager.dict()
+        MemPool = manager.dict()
 
         #Start the frontend on a separate process
         webapp = Process(target=main, args=(utxos,))
         webapp.start()
         
-        blockchain = Blockchain(utxos)
+        blockchain = Blockchain(utxos, MemPool)
         blockchain.main()
