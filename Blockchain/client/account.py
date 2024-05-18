@@ -13,11 +13,17 @@ class account:
         #constants in our elliptical curve formula in hex
         Gx = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
         Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8
-
+        
+        """Create instance of the elliptical curve point class"""
         G = Sha256Point(Gx, Gy)
 
-        private_key = secrets.randbits(256)
-        uncompressed_public_key = private_key * G
+        #generate a random private key
+        self.private_key = secrets.randbits(256)
+
+        #multiple private key by G to get public key
+        uncompressed_public_key = self.private_key * G
+
+        #return x and y coordinates of the public key
         x_point = uncompressed_public_key.x
         y_point = uncompressed_public_key.y
 
@@ -60,10 +66,7 @@ class account:
             #assigns values from BASE58 until complete and assigns to result variable
             result = BASE58_AlPHABET[mod] + result
 
-        public_address = prefix + result
-
-        self.private_key = private_key
-        self.public_address = public_address
+        self.public_address = prefix + result
 
         print(f"Private key is {self.private_key}")
         print(f"Public Address is {self.public_address}")
