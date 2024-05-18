@@ -10,8 +10,11 @@ reward = 50
 
 miner_private_key = '49190780511027130330696391407676493615547676779410269489938157581909610769221'
 miner_address = '1LHVXFSmNTPd3wKgjrZKeYwoesyPqaaGnd'
+sig_hash_all = 1
+
 
 class Coinbase_Tx:
+    """Miner reward transaction. Base because there is no sender, it comes from a block reward."""
     def __init__(self, block_height):
         self.block_height_in_little_endian = int_to_little_endian(block_height, bytes_needed(block_height))
     
@@ -81,6 +84,39 @@ class Tx:
         result += int_to_little_endian(self.locktime, 4)
 
         return result
+    
+    def sig_hash(self, input_index, script_pubkey):
+        """Convert inputs into bytes and hash them"""
+        s = int_to_little_endian(self.version, 4)
+        s += encode_varint(len(self.tx_ins))
+
+        for i, tx_in in enumerate(self.tx_ins):
+            if i == input_index:
+                s += Tx_In(tx_in.prev_tx, tx_in.prev_index, script_pubkey).serialize()
+            else:
+                s += Tx_In(tx_in.prev_tx, tx_in.prev_index).serialize()
+
+        s += encode_varint(len(self.tx_outs))
+
+        for tx_out in self.tx_outs:
+            s += tx_out.serialize()
+
+        s += int_to_little_endian(self.locktime, 4)
+        s += int_to_little_endian(sig_hash_all, 4)
+
+        h256 = hash256(s)
+        return int.from_bytes(h256, 'big')
+
+    
+    def sign_input(self, input_index, private_key, script_pubkey):
+        """Sign the input using the private key"""
+        z = self.sig_hash(input_index, script_pubkey)
+        der = private_key.sign(z).der()
+        sig = der + sig_hash_all.to_bytes(1, 'big')
+        sec = private_key.point.sec()
+        self.tx_ins[input_index].script_sig = Script([sig, sec])
+
+    
     
     def is_coinbase(self):
         """
