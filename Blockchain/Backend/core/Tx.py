@@ -116,8 +116,14 @@ class Tx:
         sec = private_key.point.sec()
         self.tx_ins[input_index].script_sig = Script([sig, sec])
 
+    def verify_input(self, input_index, script_pubkey):
+        """Verify the input using the public key"""
+        tx_in = self.tx_ins[input_index]
+        z = self.sig_hash(input_index, script_pubkey)
+        combined = tx_in.script_sig + script_pubkey
+        return combined.evaluate(z)
     
-    
+
     def is_coinbase(self):
         """
         Check there is exactly 1 input
