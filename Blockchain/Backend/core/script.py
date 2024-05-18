@@ -56,39 +56,32 @@ class Script:
     Returns:
     None. However, it prints an error message and returns False if an operation fails."""
 
+    def evaluate(self, z):
         # Copy the list of commands
         cmds = self.cmds[:]
-
         # Initialize an empty stack
         stack = []
 
         # Iterate over the commands while there are commands left
         while len(cmds) > 0:
-
             # Pop the first command from the list
             cmd = cmds.pop(0)
-
             # If the command is an integer, it's an operation code
             if type(cmd) == int:
-
                 # Get the corresponding operation function from the OP_CODE_FUNCTION dictionary
                 operation = OP_CODE_FUNCTION[cmd]
-
                 # If the operation code is 172 (op_checksig), perform the operation with the stack and z as arguments
                 if cmd == 172:
                     if not operation(stack, z):
-                        print(f"error in Signature Verification")
+                        print(f"Error in Signature Verification")
                         return False
-
-                # For other operation codes, perform the operation with the stack as the argument
-                if not operation(stack):
-                    print(f"error in operation")
+                    # For other operation codes, perform the operation with the stack as the argument
+                elif not operation(stack):
+                    print(f"Error in Signature Verification")
                     return False
-
-            # If the command is not an integer, it's a value to be pushed onto the stack
+                # If the command is not an integer, it's a value to be pushed onto the stack
             else:
                 stack.append(cmd)
-        
         return True
 
     @classmethod
