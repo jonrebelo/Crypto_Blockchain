@@ -81,14 +81,51 @@ class Blockchain:
         for tx in self.add_transactions_in_block:
             self.TxJson.append(tx.to_dict())
 
+    def calculate_fee(self):
+        """
+        Calculates the transaction fee for a block in the blockchain.
+
+        The transaction fee is the difference between the input amount and the output amount. 
+        The input amount is the total value of all inputs to the transactions in the block. 
+        The output amount is the total value of all outputs from the transactions in the block.
+
+        The function iterates over all transactions in the block, and for each transaction, 
+        it adds up the values of the inputs and outputs. The fee is then calculated as the 
+        difference between the total input and output amounts.
+
+        Attributes:
+        self.input_amount (int): The total value of all inputs to the transactions in the block.
+        self.output_amount (int): The total value of all outputs from the transactions in the block.
+        self.fee (int): The transaction fee, calculated as the difference between the input and output amounts.
+
+        """
+        self.input_amount = 0
+        self.output_amount = 0
+
+        # Calculate input amount
+        for TxId_index in self.remove_spent_transactions:
+            if TxId_index[0].hex() in self.utxos:
+                self.input_amount += self.utxos[TxId_index[0].hex()].tx_outs[TxId_index[1]].amount
+
+        # Calculate output amount
+        for tx in self.add_transactions_in_block:
+            for tx_out in tx.tx_outs:
+                self.output_amount += tx_out.amount
+
+        # Calculate fee
+        self.fee = self.input_amount - self.output_amount
+
+
 #create subsequent blocks
     def addBlock(self, block_height, prev_block_hash):
         self.read_transaction_from_mempool()
+        self.calculate_fee()
         timestamp = int(time.time())
         coinbase_instance = Coinbase_Tx(block_height)
         coinbase_tx = coinbase_instance.Coinbase_Transaction()
+        coinbase_tx.tx_outs[0].amount += self.fee
 
-        self.TxIds.insert(0, bytes.fromhex(coinbase_tx.TxId))
+        self.TxIds.insert(0, bytes.fromhex(coinbase_tx.id()))
         self.add_transactions_in_block.insert(0, coinbase_tx)
 
         merkleRoot = merkle_root(self.TxIds)[::-1].hex()
