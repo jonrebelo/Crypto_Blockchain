@@ -3,7 +3,7 @@ sys.path.append('F:/00_Github/Crypto_Blockchain')
 
 from Blockchain.Backend.core.block import Block
 from Blockchain.Backend.core.blockheader import BlockHeader
-from Blockchain.Backend.util.util import hash256
+from Blockchain.Backend.util.util import hash256, merkle_root
 from Blockchain.Backend.core.database.database import BlockchainDB
 import time
 from Blockchain.Backend.core.Tx import Coinbase_Tx
@@ -35,20 +35,45 @@ class Blockchain:
         prev_block_hash = zero_hash
         self.addBlock(block_height, prev_block_hash)
 
-    def store_utxos_in_cache(self, Transaction):
+    def store_utxos_in_cache(self):
         """Keep track of unspent transactions in cache"""
-        self.utxos[Transaction.TxId] = Transaction
+        for tx in self.add_transactions_in_block:
+            print(f"transaction added {tx.TxId}")
+            self.utxos[tx.TxId] = tx
+
+    def remove_spent_Transactions(self):
+        for tx_id_index in self.remove_spent_transactions:
+            if tx_id_index[0].hex() in self.utxos:
+
+                if len(self.utxos[tx_id_index[0].hex()].tx_outs) < 2:
+                    print(f"Spent transaction removed {tx_id_index[0].hex()}")
+                    del self.utxos[tx_id_index[0].hex()]
+                else:
+                    prev_transaction = self.utxos[tx_id_index[0].hex()]
+                    self.utxos[tx_id_index[0].hex()] = prev_transaction.tx_outs.pop(tx_id_index[1])
 
     def read_transaction_from_mempool(self):
         """Read transactions from the mempool and store them in a list to be added to the block"""
         self.TxIds = []
         self.add_transactions_in_block = []
+        self.remove_spent_transactions = []
         
 
         for tx in self.MemPool:
             print(f"Reading transaction {tx} from mempool")
-            self.TxIds.append(tx)
+            self.TxIds.append(bytes.fromhex(tx))
             self.add_transactions_in_block.append(self.MemPool[tx])
+
+            for spent in self.MemPool[tx].tx_ins:
+                self.remove_spent_transactions.append([spent.prev_tx, spent.prev_index])
+
+    def remove_tx_from_mempool(self):
+        """Remove Transactions from MemPool"""
+        for tx in self.TxIds:
+            if tx.hex() in self.MemPool:
+                print(f"Removing transaction {tx.hex()} from mempool")
+                del self.MemPool[tx.hex()]
+
 
     def convert_to_json(self):
         self.TxJson = []
@@ -63,14 +88,16 @@ class Blockchain:
         coinbase_instance = Coinbase_Tx(block_height)
         coinbase_tx = coinbase_instance.Coinbase_Transaction()
 
-        self.TxIds.insert(0, coinbase_tx.TxId)
+        self.TxIds.insert(0, bytes.fromhex(coinbase_tx.TxId))
         self.add_transactions_in_block.insert(0, coinbase_tx)
 
-        merkleRoot = coinbase_tx.TxId
+        merkleRoot = merkle_root(self.TxIds)[::-1].hex()
         bits = 'ffff001f'
         blockheader = BlockHeader(version, prev_block_hash, merkleRoot, timestamp, bits)
         blockheader.mine()
-        self.store_utxos_in_cache(coinbase_tx)
+        self.remove_spent_Transactions()
+        self.remove_tx_from_mempool()
+        self.store_utxos_in_cache()
         self.convert_to_json()
         print(f"Block {block_height} mined successfully with Nonce value {blockheader.nonce}")
         self.write_on_disk([Block(block_height, 1, blockheader.__dict__, 1, self.TxJson).__dict__])
