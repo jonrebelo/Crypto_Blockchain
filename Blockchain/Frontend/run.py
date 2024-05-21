@@ -31,6 +31,7 @@ def wallet():
             if verified:
                 MEMPOOL[tx_obj.TxId] = tx_obj
                 message = "Transaction added to mempool"
+                
         
     return render_template('wallet.html', message = message)
 
