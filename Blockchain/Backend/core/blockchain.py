@@ -3,7 +3,7 @@ sys.path.append('F:/00_Github/Crypto_Blockchain')
 
 from Blockchain.Backend.core.block import Block
 from Blockchain.Backend.core.blockheader import BlockHeader
-from Blockchain.Backend.util.util import hash256, merkle_root
+from Blockchain.Backend.util.util import hash256, merkle_root, target_to_bits
 from Blockchain.Backend.core.database.database import BlockchainDB
 import time
 from Blockchain.Backend.core.Tx import Coinbase_Tx
@@ -14,12 +14,16 @@ from Blockchain.Frontend.run import main
 #create the first hash for genesis block
 zero_hash = '0' * 64
 version = 1
+initial_target = 0x0000ffff00000000000000000000000000000000000000000000000000000000
+
 #Create the blockchain
 class Blockchain:
     def __init__(self, utxos, MemPool):
         self.utxos = utxos
         self.MemPool = MemPool
-        print(f"Blockchain initialized with UTXOS: {utxos} and MemPool: {MemPool}") 
+        print(f"Blockchain initialized with UTXOS: {utxos} and MemPool: {MemPool}")
+        self.current_target = initial_target
+        self.bits = target_to_bits(initial_target)
 
     def write_on_disk (self, block):
         blockchaindb = BlockchainDB()
@@ -129,9 +133,8 @@ class Blockchain:
         self.add_transactions_in_block.insert(0, coinbase_tx)
 
         merkleRoot = merkle_root(self.TxIds)[::-1].hex()
-        bits = 'ffff001f'
-        blockheader = BlockHeader(version, prev_block_hash, merkleRoot, timestamp, bits)
-        blockheader.mine()
+        blockheader = BlockHeader(version, prev_block_hash, merkleRoot, timestamp, self.bits)
+        blockheader.mine(self.current_target)
         self.remove_spent_Transactions()
         self.remove_tx_from_mempool()
         self.store_utxos_in_cache()

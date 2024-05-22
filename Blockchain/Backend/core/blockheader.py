@@ -1,4 +1,4 @@
-from Blockchain.Backend.util.util import hash256
+from Blockchain.Backend.util.util import hash256, little_endian_to_int, int_to_little_endian
 
 class BlockHeader:
     def __init__(self, version, prev_block_hash, merkleRoot, timestamp, bits):
@@ -10,11 +10,19 @@ class BlockHeader:
         self.nonce = 0
         self.blockHash = ''
 
-    def mine(self):
+    def mine(self, target):
+        self.blockHash = target + 1
         #Check blockHash for leading 0s
-        while (self.blockHash[0:4]) != '0000':
-            #combine and pass into hash function. converts non-strings into strings, then convert to hex.
-            self.blockHash = hash256((str(self.version) + self.prev_block_hash + self.merkleRoot + str(self.timestamp)
-                    + self.bits + str(self.nonce)).encode()).hex()
+        while self.blockHash > target:
+            self.blockHash = little_endian_to_int(hash256(int_to_little_endian(self.version, 4)
+                        + bytes.fromhex(self.prev_block_hash)[::-1]
+                        + bytes.fromhex(self.merkleRoot)
+                        + int_to_little_endian(self.timestamp, 4)
+                        + self.bits
+                        + int_to_little_endian(self.nonce, 4)
+                )
+            )
             self.nonce += 1
             print(f"Mining Started {self.nonce}", end = '\r')
+        self.blockHash = int_to_little_endian(self.blockHash, 32).hex()[::-1]
+        self.bits = self.bits.hex()
