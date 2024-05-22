@@ -58,6 +58,7 @@ class Blockchain:
 
     def read_transaction_from_mempool(self):
         """Read transactions from the mempool and store them in a list to be added to the block"""
+        self.blocksize = 80
         self.TxIds = []
         self.add_transactions_in_block = []
         self.remove_spent_transactions = []
@@ -67,6 +68,7 @@ class Blockchain:
             print(f"Reading transaction {tx} from mempool")
             self.TxIds.append(bytes.fromhex(tx))
             self.add_transactions_in_block.append(self.MemPool[tx])
+            self.blocksize += len(self.MemPool[tx].serialize())
 
             for spent in self.MemPool[tx].tx_ins:
                 self.remove_spent_transactions.append([spent.prev_tx, spent.prev_index])
@@ -127,6 +129,7 @@ class Blockchain:
         timestamp = int(time.time())
         coinbase_instance = Coinbase_Tx(block_height)
         coinbase_tx = coinbase_instance.Coinbase_Transaction()
+        self.blocksize += len(coinbase_tx.serialize())
         coinbase_tx.tx_outs[0].amount += self.fee
 
         self.TxIds.insert(0, bytes.fromhex(coinbase_tx.id()))
@@ -140,9 +143,8 @@ class Blockchain:
         self.store_utxos_in_cache()
         self.convert_to_json()
         print(f"Block {block_height} mined successfully with Nonce value {blockheader.nonce}")
-        self.write_on_disk([Block(block_height, 1, blockheader.__dict__, 1, self.TxJson).__dict__])
+        self.write_on_disk([Block(block_height, self.blocksize, blockheader.__dict__, 1, self.TxJson).__dict__])
         print(f"Block {block_height} written on disk")
-        self.write_on_disk([Block(block_height, 1, blockheader.__dict__, 1, self.TxJson).__dict__])
         
 #Add new blocks to the chain
     def main(self):
