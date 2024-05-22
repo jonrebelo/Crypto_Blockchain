@@ -90,3 +90,39 @@ def merkle_root(hashes):
 
     return current_level[0]
 
+def target_to_bits(target):
+    """
+    Converts a target integer into a compact representation called 'bits'.
+
+    This function is used in Bitcoin's difficulty adjustment algorithm. The 'bits' 
+    format is a compact representation of a target, which is a 256-bit number that 
+    a hashed block header must be less than or equal to for new blocks to be accepted.
+
+    Parameters:
+    target (int): The target value to be converted into 'bits'.
+
+    Returns:
+    bytes: The 'bits' representation of the target.
+
+    Steps:
+    1. Convert the target integer into bytes using big endian byte order.
+    2. Remove any leading zeros from the byte representation of the target.
+    3. If the first byte is greater than 127 (0x7F), increment the length of the byte string by 1 and 
+       take the first two bytes as the coefficient. Otherwise, the length of the byte string is the exponent 
+       and the first three bytes are the coefficient.
+    4. The 'bits' are then calculated by concatenating the reversed coefficient and the exponent.
+    """
+
+    raw_bytes = target.to_bytes(32, "big")
+    raw_bytes = raw_bytes.lstrip(b"\x00")  # Remove leading zeros
+
+    if raw_bytes[0] > 0x7F:  # If the first byte is greater than 127
+        exponent = len(raw_bytes) + 1
+        coefficient = b"\x00" + raw_bytes[:2]
+    else:
+        exponent = len(raw_bytes)
+        coefficient = raw_bytes[:3]
+
+    new_bits = coefficient[::-1] + bytes([exponent])  # Calculate 'bits'
+
+    return new_bits
