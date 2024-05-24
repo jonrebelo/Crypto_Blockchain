@@ -25,6 +25,23 @@ def bytes_needed(n):
         return 1
     return int(log(n, 256)) + 1
 
+def encode_base58(s):
+#determine how many 0 bytes (or 0x00) s starts with
+    count = 0
+    for c in s:
+        if c == 0:
+            count+=1
+        else:
+            break
+    #convert to big endian integer
+    num = int.from_bytes(s, 'big')
+    prefix = '1' * count
+    result = ''
+    while num > 0:
+        num, mod = divmod(num, 58)
+        result = BASE58_ALPHABET[mod] + result
+    return prefix + result
+
 def decode_base58(s):
     num = 0
 
