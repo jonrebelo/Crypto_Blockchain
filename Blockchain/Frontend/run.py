@@ -6,23 +6,106 @@ from Blockchain.Backend.util.util import encode_base58, decode_base58, sha256
 
 app = Flask(__name__)
 main_prefix = b'\x00'
+global memoryPool
+memoryPool ={}
 
 
 @app.route('/')
 def index():
     return render_template('/home.html')
 
+@app.route('/transactions/<txid>')
 @app.route('/transactions')
-def transactions(): 
-    return "<h1>Transactions</h1>"
+def transactions(txid = None):
+    if txid:
+        return redirect(url_for('txDetail', txid = txid))
+    else:
+        ErrorFlag = True
+        while ErrorFlag:
+            try:
+                allTxs = dict(UTXOS)
+                ErrorFlag = False
+                return render_template("transactions.html",allTransactions = allTxs,refreshtime = 10)
+            except:
+                ErrorFlag = True
+                return render_template('transactions.html', allTransactions={}, refreshtime = 10)
+
+@app.route('/tx/<txid>')
+def txDetail(txid):
+    blocks = readDatabase()
+    for block in blocks:
+        for Tx in block['Txs']:
+            if Tx['TxId'] == txid:
+                return render_template('txDetail.html', Tx=Tx, block = block , encode_base58 = encode_base58,
+                bytes = bytes, sha256 = sha256, main_prefix = main_prefix)
+    return "<h1> No Results Found </h1>"         
 
 @app.route('/mempool')
-def mempool(): 
-    return "<h1>MemPool</h1>"
+def mempool():
+    try:
+        blocks = readDatabase()
+        ErrorFlag = True
+        while ErrorFlag:
+            try: 
+                mempooltxs = dict(MEMPOOL)
+                ErrorFlag = False
+            except:
+                ErrorFlag = True
+                print("Error reading mempool")
 
+        """" If TxId is not in the Original list then remove it from the mempool """
+        for txid in memoryPool:
+            if txid not in mempooltxs:
+                del memoryPool[txid]
+
+        """Add the new Tx to the mempool if it is not already there"""
+        for TxId in mempooltxs:
+            amount = 0
+            TxObj = mempooltxs[TxId]      
+            matchFound = False
+
+            """ Total Amount """
+            for txin in TxObj.tx_ins:
+                for block in blocks:
+                    for Tx in block['Txs']:
+                        if Tx['TxId'] == txin.prev_tx.hex():
+                            amount  += Tx['tx_outs'][txin.prev_index]['amount']
+                            matchFound = True
+                            break
+                    if matchFound:
+                        matchFound = False
+                        break
+            memoryPool[TxObj.TxId] = [TxObj.to_dict(), amount/100000000, txin.prev_index]
+        return render_template('mempool.html', Txs = memoryPool,refreshtime = 2)
+
+    except Exception as e:
+        return render_template('mempool.html', Txs = memoryPool,refreshtime = 2)
+
+@app.route('/memTx/<txid>')
+def memTxDetails(txid):
+    print(f"txid: {txid}")
+    print(f"memoryPool keys: {memoryPool.keys()}")
+    if txid in memoryPool:
+        Tx = memoryPool.get(txid)[0]
+        print(f"Tx: {Tx}")
+        print(f"this is what's in the txId {Tx}")
+        return render_template('txDetail.html', Tx = Tx, refreshtime = 2,
+        encode_base58 = encode_base58, bytes = bytes, sha256 = sha256, main_prefix = main_prefix,
+        Unconfirmed = True)
+        
+    else:
+        return redirect(url_for('transactions', txid = txid))
+        
 @app.route('/search')
-def search(): 
-    return "<h1>Search</h1>"
+def search():
+    identifier = request.args.get('search')
+    if len(identifier) == 64:
+        if identifier[:4] == "0000":
+            return redirect(url_for('showBlock', blockHeader = identifier))
+        else:
+            return redirect(url_for('txDetail', txid = identifier))
+    else:
+        return redirect(url_for('address', publicAddress = identifier))
 
 """ Read data from the Blockchain """
 def readDatabase():
@@ -31,7 +114,6 @@ def readDatabase():
         try:
             blockchain = BlockchainDB()
             blocks = blockchain.read()
-            print("Blocks from database:", blocks)  # print blocks
             ErrorFlag = False
         except:
             ErrorFlag = True
@@ -56,9 +138,33 @@ def showBlock(blockHeader):
     
     return "<h1> Invalid Identifier </h1>"
 
-@ app.route('/address')
-def address():
-    return "<h1> Address Page </h1>"
+@app.route('/address/<publicAddress>')
+def address(publicAddress):
+    if len(publicAddress) < 35 and publicAddress[:1] == "1":
+        h160 = decode_base58(publicAddress)
+
+        ErrorFlag = True
+        while ErrorFlag:
+            try:
+                AllUtxos = dict(UTXOS)
+                ErrorFlag = False
+            except Exception as e:
+                ErrorFlag = True
+        
+        amount = 0
+        AccountUtxos = []
+
+        for TxId in AllUtxos:
+           for tx_out in AllUtxos[TxId].tx_outs:
+            if tx_out.script_pubkey.cmds[2] == h160:
+                amount += tx_out.amount
+                AccountUtxos.append(AllUtxos[TxId])
+        
+        return render_template('address.html', Txs = AccountUtxos, amount = amount,
+        encode_base58 = encode_base58, bytes = bytes, sha256 = sha256, main_prefix = main_prefix, 
+        publicAddress = publicAddress, qrcode = qrcode)
+    else:
+        return "<h1> Invalid Identifier </h1>"
 
 @app.route("/wallet", methods=['GET', 'POST'])
 def wallet():

@@ -16,8 +16,13 @@
   
   body {
     background-color: black;
+    background-attachment: fixed;
   }
-  
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
   #cover {
     /* background-image: url('/static/images/wal5.jpg'); */
     /* background-image: linear-gradient(110deg,black, black,rgba(230,85,237,255),rgba(254,238,148,255),rgba(230,85,237,90),purple); */
@@ -33,7 +38,8 @@
   
     background-size: cover;
     background-position: center;
-    height: 100vh;
+    background-attachment: fixed;
+    min-height: 100%;
     padding: 2em;
     position: relative;
   }

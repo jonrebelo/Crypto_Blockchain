@@ -12,7 +12,7 @@ from Blockchain.Frontend.run import main
 
 
 #create the first hash for genesis block
-zero_hash = '0' * 64
+ZERO_HASH = '0' * 64
 version = 1
 initial_target = 0x0000ffff00000000000000000000000000000000000000000000000000000000
 
@@ -36,7 +36,7 @@ class Blockchain:
 #create the first block
     def GenesisBlock(self):
         block_height = 0
-        prev_block_hash = zero_hash
+        prev_block_hash = ZERO_HASH
         self.addBlock(block_height, prev_block_hash)
 
     def store_utxos_in_cache(self):
@@ -49,12 +49,14 @@ class Blockchain:
         for tx_id_index in self.remove_spent_transactions:
             if tx_id_index[0].hex() in self.utxos:
 
-                if len(self.utxos[tx_id_index[0].hex()].tx_outs) < 2:
-                    print(f"Spent transaction removed {tx_id_index[0].hex()}")
-                    del self.utxos[tx_id_index[0].hex()]
+                if len(self.utxos[txId_index[0].hex()].tx_outs) < 2:
+                    print(f" Spent Transaction removed {txId_index[0].hex()} ")
+                    del self.utxos[txId_index[0].hex()]
                 else:
-                    prev_transaction = self.utxos[tx_id_index[0].hex()]
-                    self.utxos[tx_id_index[0].hex()] = prev_transaction.tx_outs.pop(tx_id_index[1])
+                    prev_trans = self.utxos[txId_index[0].hex()]
+                    self.utxos[txId_index[0].hex()] = prev_trans.tx_outs.pop(
+                        txId_index[1]
+                    )
 
     def read_transaction_from_mempool(self):
         """Read transactions from the mempool and store them in a list to be added to the block"""
@@ -77,7 +79,6 @@ class Blockchain:
         """Remove Transactions from MemPool"""
         for tx in self.TxIds:
             if tx.hex() in self.MemPool:
-                print(f"Removing transaction {tx.hex()} from mempool")
                 del self.MemPool[tx.hex()]
 
 
@@ -125,6 +126,7 @@ class Blockchain:
 #create subsequent blocks
     def addBlock(self, block_height, prev_block_hash):
         self.read_transaction_from_mempool()
+        print(f"Block {block_height} read from mempool")
         self.calculate_fee()
         timestamp = int(time.time())
         coinbase_instance = Coinbase_Tx(block_height)
@@ -140,6 +142,7 @@ class Blockchain:
         blockheader.mine(self.current_target)
         self.remove_spent_Transactions()
         self.remove_tx_from_mempool()
+        print(f"Transactions {block_height} removed from mempool")
         self.store_utxos_in_cache()
         self.convert_to_json()
         print(f"Block {block_height} mined successfully with Nonce value {blockheader.nonce}")

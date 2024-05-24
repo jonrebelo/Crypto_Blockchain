@@ -1,0 +1,18 @@
+{% extends 'base.html' %} {% block title %} UTXOs {% endblock %} {% block content %}
+<div class="grid-container1">
+  <h1 style="text-align: center;">Unspent Transactions (UTXO)</h1>
+  <p style="text-align: center; margin-left: 20px; margin-right: 20px; padding-left: 20px; padding-right: 20px;">UTXOs, or Unspent Transaction Outputs, are the individual pieces of bitcoin that are held by individuals and can be sent in future transactions. They are the output of a transaction that you've received but haven't spent yet.</p>
+  <hr style="border-top: 1px solid #ccc; margin: 20px 0;"> <!-- Divider -->
+  <div class="blockheader">
+    <div class="bheader">Transaction ID</div>
+  </div>
+
+  {% for Tx in allTransactions %}
+  <a id="detail" href="{{ url_for('transactions', txid= Tx ) }}">
+    <div class="block">
+      <div class="block-item TxId">{{ Tx }}</div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}
