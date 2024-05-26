@@ -86,7 +86,7 @@ def mempool():
 def memTxDetails(txid):
     if txid in memoryPool:
         Tx = memoryPool.get(txid)[0]
-        return render_template('txDetail.html', Tx = Tx,
+        return render_template('txDetail.html', Tx = Tx, refreshtime = 2,
         encode_base58 = encode_base58, bytes = bytes, sha256 = sha256, main_prefix = main_prefix,
         Unconfirmed = True)
     else:
@@ -122,7 +122,7 @@ def block():
         return redirect(url_for('showBlock', blockHeader=request.args.get('blockHeader')) )
     else:
         blocks = readDatabase()
-        return render_template('block.html', blocks = blocks)
+        return render_template('block.html', blocks = blocks, refreshtime = 10)
 
 @app.route('/block/<blockHeader>')
 def showBlock(blockHeader):
