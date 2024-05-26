@@ -3,8 +3,10 @@ from Blockchain.client.send_crypto import send_crypto
 from Blockchain.Backend.core.Tx import Tx
 from Blockchain.Backend.core.database.database import BlockchainDB
 from Blockchain.Backend.util.util import encode_base58, decode_base58, sha256
+from flask_qrcode import QRcode
 
 app = Flask(__name__)
+qrcode = QRcode(app)
 main_prefix = b'\x00'
 global memoryPool
 memoryPool ={}
@@ -38,7 +40,7 @@ def txDetail(txid):
             if Tx['TxId'] == txid:
                 return render_template('txDetail.html', Tx=Tx, block = block , encode_base58 = encode_base58,
                 bytes = bytes, sha256 = sha256, main_prefix = main_prefix)
-    return "<h1> No Results Found </h1>"         
+    return "<h1> No Results Found </h1>"        
 
 @app.route('/mempool')
 def mempool():
@@ -51,17 +53,16 @@ def mempool():
                 ErrorFlag = False
             except:
                 ErrorFlag = True
-                print("Error reading mempool")
 
-        """" If TxId is not in the Original list then remove it from the mempool """
+        """" If TxId is not in the Origional list then remove it from the mempool """
         for txid in memoryPool:
             if txid not in mempooltxs:
                 del memoryPool[txid]
 
         """Add the new Tx to the mempool if it is not already there"""
-        for TxId in mempooltxs:
+        for Txid in mempooltxs:
             amount = 0
-            TxObj = mempooltxs[TxId]      
+            TxObj = mempooltxs[Txid]      
             matchFound = False
 
             """ Total Amount """
@@ -76,23 +77,18 @@ def mempool():
                         matchFound = False
                         break
             memoryPool[TxObj.TxId] = [TxObj.to_dict(), amount/100000000, txin.prev_index]
-        return render_template('mempool.html', Txs = memoryPool,refreshtime = 2)
+        return render_template('mempool.html', Txs = memoryPool, refreshtime = 2)
 
     except Exception as e:
-        return render_template('mempool.html', Txs = memoryPool,refreshtime = 2)
+        return render_template('mempool.html', Txs = memoryPool, refreshtime = 2)
 
 @app.route('/memTx/<txid>')
 def memTxDetails(txid):
-    print(f"txid: {txid}")
-    print(f"memoryPool keys: {memoryPool.keys()}")
     if txid in memoryPool:
         Tx = memoryPool.get(txid)[0]
-        print(f"Tx: {Tx}")
-        print(f"this is what's in the txId {Tx}")
-        return render_template('txDetail.html', Tx = Tx, refreshtime = 2,
+        return render_template('txDetail.html', Tx = Tx,
         encode_base58 = encode_base58, bytes = bytes, sha256 = sha256, main_prefix = main_prefix,
         Unconfirmed = True)
-        
     else:
         return redirect(url_for('transactions', txid = txid))
         
