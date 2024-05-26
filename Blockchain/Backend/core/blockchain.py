@@ -156,7 +156,7 @@ class Blockchain:
         self.write_on_disk(
             [
                 Block(
-                    BlockHeight, self.Blocksize, blockheader.__dict__, 1, self.TxJson
+                    BlockHeight, self.Blocksize, blockheader.__dict__, len(self.TxJson), self.TxJson
                 ).__dict__
             ]
         )
