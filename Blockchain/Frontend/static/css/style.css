@@ -155,10 +155,10 @@
   .grid-container {
     display: grid;
     grid-template-columns: auto;
-    background-image: linear-gradient(
-      to right,
-      rgb(0, 89, 255),
-      rgb(225, 0, 255)
+    background-image: radial-gradient(
+      circle,
+      rgb(39, 40, 39),  /* grey */
+      rgb(75, 75, 77)      /* dark grey */
     );
     /* background-color:rgb(204, 0, 255); */
     margin: 8em 5em 0em 5em;
@@ -192,7 +192,8 @@
   }
   
   .loadmore {
-    background-color: rgb(204, 0, 255);
+    background-color:       rgb(245, 110, 11)
+    ;
     border: none;
     color: whitesmoke;
     padding: 1em;
@@ -212,7 +213,8 @@
   .grid-container #detail:hover {
     /* background-color: rgb(64, 224, 163); */
     /* background-color: rgba(254,120,150,230); */
-    background-color: rgb(225, 0, 255);
+    background-color:       rgb(245, 110, 11)
+    ;
     border-radius: 4em;
   }
   
@@ -244,10 +246,10 @@
   .grid-container1 {
     display: grid;
     grid-template-columns: auto;
-    background-image: linear-gradient(
-      to right,
-      rgb(0, 89, 255),
-      rgb(225, 0, 255)
+    background-image: radial-gradient(
+      circle,
+      rgb(39, 40, 39),  /* grey */
+      rgb(75, 75, 77)      /* dark grey */
     );
     margin: 8em 5em 0em 5em;
     border-radius: 1em;
@@ -280,7 +282,8 @@
   
   .grid-container1 #detail:hover {
     /* background-color: rgb(64, 224, 163); */
-    background-color: rgb(225, 0, 255);
+    background-color:       rgb(245, 110, 11)
+    ;
     border-radius: 4em;
   }
   
@@ -341,10 +344,10 @@
   .grid-container3 {
     display: grid;
     grid-template-columns: 20em 1fr;
-    background-image: linear-gradient(
-      to right,
-      rgb(0, 89, 255),
-      rgb(225, 0, 255)
+    background-image: radial-gradient(
+      circle,
+      rgb(39, 40, 39),  /* grey */
+      rgb(75, 75, 77)      /* dark grey */
     );
     margin: 1em 5em 0em 5em;
     padding: 1em;
@@ -387,10 +390,10 @@
     display: grid;
     position: relative;
     grid-template-columns: 1fr 1fr;
-    background-image: linear-gradient(
-      to right,
-      rgb(0, 89, 255),
-      rgb(225, 0, 255)
+    background-image: radial-gradient(
+      circle,
+      rgb(39, 40, 39),  /* grey */
+      rgb(75, 75, 77)      /* dark grey */
     );
     margin: 1em 5em 0em 5em;
     border-radius: 1em;
@@ -407,11 +410,11 @@
   }
   
   .TxStyle .TxId a {
-    color: rgb(0, 255, 157);
+    color: rgb(245, 110, 11);
   }
   
   .TxHeader h1 {
-    color: rgb(0, 255, 242);
+    color: rgb(245, 110, 11);
   }
   
   .TxStyle h3 {
@@ -420,9 +423,9 @@
   
   .TxInput {
     background-image: linear-gradient(
-      to right,
-      rgb(255, 0, 221),
-      rgb(143, 143, 143)
+      to left,
+      rgb(245, 110, 11),
+      rgb(123, 113, 113)
     );
     border-radius: 1em;
     margin-top: 1em;
@@ -433,9 +436,9 @@
   
   .Txoutput {
     background-image: linear-gradient(
-      to right,
-      rgb(255, 0, 221),
-      rgb(76, 0, 255)
+      to left,
+      rgb(245, 110, 11),
+      rgb(123, 113, 113)
     );
     padding: 1em;
     margin-top: 1em;
