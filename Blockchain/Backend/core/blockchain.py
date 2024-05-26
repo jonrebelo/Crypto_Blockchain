@@ -12,42 +12,42 @@ from Blockchain.Frontend.run import main
 
 
 #create the first hash for genesis block
-ZERO_HASH = '0' * 64
-version = 1
-initial_target = 0x0000ffff00000000000000000000000000000000000000000000000000000000
+ZERO_HASH = "0" * 64
+VERSION = 1
+INITIAL_TARGET = 0x0000FFFF00000000000000000000000000000000000000000000000000000000
 
-#Create the blockchain
+#Create blockchain
 class Blockchain:
     def __init__(self, utxos, MemPool):
         self.utxos = utxos
         self.MemPool = MemPool
-        print(f"Blockchain initialized with UTXOS: {utxos} and MemPool: {MemPool}")
-        self.current_target = initial_target
-        self.bits = target_to_bits(initial_target)
+        self.current_target = INITIAL_TARGET
+        self.bits = target_to_bits(INITIAL_TARGET)
 
-    def write_on_disk (self, block):
-        blockchaindb = BlockchainDB()
-        blockchaindb.write(block)
-    
+    def write_on_disk(self, block):
+        blockchainDB = BlockchainDB()
+        blockchainDB.write(block)
+
     def fetch_last_block(self):
-        blockchaindb = BlockchainDB()
-        return blockchaindb.lastBlock()
+        blockchainDB = BlockchainDB()
+        return blockchainDB.lastBlock()
     
-#create the first block
+#Create First Block
     def GenesisBlock(self):
-        block_height = 0
-        prev_block_hash = ZERO_HASH
-        self.addBlock(block_height, prev_block_hash)
+        BlockHeight = 0
+        prevBlockHash = ZERO_HASH
+        self.addBlock(BlockHeight, prevBlockHash)
 
-    def store_utxos_in_cache(self):
-        """Keep track of unspent transactions in cache"""
-        for tx in self.add_transactions_in_block:
-            print(f"transaction added {tx.TxId}")
+    """ Keep Track of all the unspent Transaction in cache memory"""
+
+    def store_uxtos_in_cache(self):
+        for tx in self.addTransactionsInBlock:
+            print(f"Transaction added {tx.TxId} ")
             self.utxos[tx.TxId] = tx
 
     def remove_spent_Transactions(self):
-        for tx_id_index in self.remove_spent_transactions:
-            if tx_id_index[0].hex() in self.utxos:
+        for txId_index in self.remove_spent_transactions:
+            if txId_index[0].hex() in self.utxos:
 
                 if len(self.utxos[txId_index[0].hex()].tx_outs) < 2:
                     print(f" Spent Transaction removed {txId_index[0].hex()} ")
@@ -58,34 +58,32 @@ class Blockchain:
                         txId_index[1]
                     )
 
-    def read_transaction_from_mempool(self):
-        """Read transactions from the mempool and store them in a list to be added to the block"""
-        self.blocksize = 80
+    """ Read Transactions from Memory Pool"""
+
+    def read_transaction_from_memorypool(self):
+        self.Blocksize = 80
         self.TxIds = []
-        self.add_transactions_in_block = []
+        self.addTransactionsInBlock = []
         self.remove_spent_transactions = []
-        
 
         for tx in self.MemPool:
-            print(f"Reading transaction {tx} from mempool")
             self.TxIds.append(bytes.fromhex(tx))
-            self.add_transactions_in_block.append(self.MemPool[tx])
-            self.blocksize += len(self.MemPool[tx].serialize())
+            self.addTransactionsInBlock.append(self.MemPool[tx])
+            self.Blocksize += len(self.MemPool[tx].serialize())
 
             for spent in self.MemPool[tx].tx_ins:
                 self.remove_spent_transactions.append([spent.prev_tx, spent.prev_index])
 
-    def remove_tx_from_mempool(self):
-        """Remove Transactions from MemPool"""
+    """ Remove Transactions from Memory pool """
+
+    def remove_transactions_from_memorypool(self):
         for tx in self.TxIds:
             if tx.hex() in self.MemPool:
                 del self.MemPool[tx.hex()]
 
-
     def convert_to_json(self):
         self.TxJson = []
-
-        for tx in self.add_transactions_in_block:
+        for tx in self.addTransactionsInBlock:
             self.TxJson.append(tx.to_dict())
 
     def calculate_fee(self):
@@ -109,76 +107,82 @@ class Blockchain:
         self.input_amount = 0
         self.output_amount = 0
 
-        # Calculate input amount
         for TxId_index in self.remove_spent_transactions:
             if TxId_index[0].hex() in self.utxos:
-                self.input_amount += self.utxos[TxId_index[0].hex()].tx_outs[TxId_index[1]].amount
+                self.input_amount += (
+                    self.utxos[TxId_index[0].hex()].tx_outs[TxId_index[1]].amount
+                )
 
-        # Calculate output amount
-        for tx in self.add_transactions_in_block:
+        """ Calculate Output Amount """
+        for tx in self.addTransactionsInBlock:
             for tx_out in tx.tx_outs:
                 self.output_amount += tx_out.amount
 
-        # Calculate fee
         self.fee = self.input_amount - self.output_amount
 
+        #create subsequent blocks
 
-#create subsequent blocks
-    def addBlock(self, block_height, prev_block_hash):
-        self.read_transaction_from_mempool()
-        print(f"Block {block_height} read from mempool")
+    def addBlock(self, BlockHeight, prevBlockHash):
+        self.read_transaction_from_memorypool()
+        print(f"Block {BlockHeight} read from mempool")
+
         self.calculate_fee()
         timestamp = int(time.time())
-        coinbase_instance = Coinbase_Tx(block_height)
-        coinbase_tx = coinbase_instance.Coinbase_Transaction()
-        self.blocksize += len(coinbase_tx.serialize())
-        coinbase_tx.tx_outs[0].amount += self.fee
+        coinbaseInstance = Coinbase_Tx(BlockHeight)
+        coinbaseTx = coinbaseInstance.Coinbase_Transaction()
+        self.Blocksize += len(coinbaseTx.serialize())
 
-        self.TxIds.insert(0, bytes.fromhex(coinbase_tx.id()))
-        self.add_transactions_in_block.insert(0, coinbase_tx)
+        coinbaseTx.tx_outs[0].amount = coinbaseTx.tx_outs[0].amount + self.fee
+
+        self.TxIds.insert(0, bytes.fromhex(coinbaseTx.id()))
+        self.addTransactionsInBlock.insert(0, coinbaseTx)
 
         merkleRoot = merkle_root(self.TxIds)[::-1].hex()
-        blockheader = BlockHeader(version, prev_block_hash, merkleRoot, timestamp, self.bits)
+
+        blockheader = BlockHeader(
+            VERSION, prevBlockHash, merkleRoot, timestamp, self.bits
+        )
         blockheader.mine(self.current_target)
         self.remove_spent_Transactions()
-        self.remove_tx_from_mempool()
-        print(f"Transactions {block_height} removed from mempool")
-        self.store_utxos_in_cache()
+        self.remove_transactions_from_memorypool()
+        print(f"Transactions {BlockHeight} removed from mempool")
+
+        self.store_uxtos_in_cache()
         self.convert_to_json()
-        print(f"Block {block_height} mined successfully with Nonce value {blockheader.nonce}")
-        self.write_on_disk([Block(block_height, self.blocksize, blockheader.__dict__, 1, self.TxJson).__dict__])
-        print(f"Block {block_height} written on disk")
-        
+
+        print(
+            f"Block {BlockHeight} mined successfully with Nonce value of {blockheader.nonce}"
+        )
+        self.write_on_disk(
+            [
+                Block(
+                    BlockHeight, self.Blocksize, blockheader.__dict__, 1, self.TxJson
+                ).__dict__
+            ]
+        )
 #Add new blocks to the chain
+
     def main(self):
         lastBlock = self.fetch_last_block()
         if lastBlock is None:
-            print("Creating genesis block")
             self.GenesisBlock()
+
         while True:
-            #Locate last block
             lastBlock = self.fetch_last_block()
-            #Add 1 to the last block height
-            block_height = lastBlock["Height"] + 1
-            #Retrieve the last block hash
-            prev_block_hash = lastBlock["BlockHeader"]["blockHash"]
-            #pass to addBlock method
-            print(f"Adding block {block_height} to the blockchain")
-            self.addBlock(block_height, prev_block_hash)
-
-
-
+            BlockHeight = lastBlock["Height"] + 1
+            print(f"Current Block Height is is {BlockHeight}")
+            prevBlockHash = lastBlock["BlockHeader"]["blockHash"]
+            self.addBlock(BlockHeight, prevBlockHash)
+            
 if __name__ == "__main__":
     with Manager() as manager:
         utxos = manager.dict()
         MemPool = manager.dict()
-
         print(f"Manager started with UTXOS: {utxos} and MemPool: {MemPool}")  # Print the initial UTXOS and MemPool
 
-        #Start the frontend on a separate process
         webapp = Process(target=main, args=(utxos, MemPool))
         webapp.start()
-        
+
         blockchain = Blockchain(utxos, MemPool)
         blockchain.main()
     
