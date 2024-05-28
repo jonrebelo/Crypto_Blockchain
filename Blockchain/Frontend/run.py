@@ -191,9 +191,9 @@ def wallet():
         
     return render_template('wallet.html', message = message)
 
-def main(utxos, MemPool):
+def main(utxos, MemPool, port):
     global UTXOS
     global MEMPOOL
     UTXOS = utxos
     MEMPOOL = MemPool
-    app.run()
+    app.run(port = port)
