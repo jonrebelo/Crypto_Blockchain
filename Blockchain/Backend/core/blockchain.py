@@ -1,14 +1,15 @@
 import sys
 sys.path.append('F:/00_Github/Crypto_Blockchain')
-
+import configparser
 from Blockchain.Backend.core.block import Block
 from Blockchain.Backend.core.blockheader import BlockHeader
 from Blockchain.Backend.util.util import hash256, merkle_root, target_to_bits
-from Blockchain.Backend.core.database.database import BlockchainDB
+from Blockchain.Backend.core.database.database import BlockchainDB, NodeDB
 import time
 from Blockchain.Backend.core.Tx import Coinbase_Tx
 from multiprocessing import Process, Manager
 from Blockchain.Frontend.run import main
+from Blockchain.Backend.core.network.sync_manager import sync_manager
 
 
 #create the first hash for genesis block
@@ -37,6 +38,18 @@ class Blockchain:
         BlockHeight = 0
         prevBlockHash = ZERO_HASH
         self.addBlock(BlockHeight, prevBlockHash)
+
+    """Starts node synchronization process"""
+
+    def startSync(self):
+        node = NodeDB()
+        port_list = node.read()
+
+        for port in port_list:
+            if port != localPort:
+                sync = sync_manager(localHost, port)
+                sync.start_download(port)
+
 
     """ Keep Track of all the unspent Transaction in cache memory"""
 
@@ -175,14 +188,27 @@ class Blockchain:
             self.addBlock(BlockHeight, prevBlockHash)
             
 if __name__ == "__main__":
+    """Read config file"""
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    localHost = config['DEFAULT']['host']
+    localPort = int(config['MINER']['port'])
+    webport = int(config['WEBHOST']['port'])
+
     with Manager() as manager:
         utxos = manager.dict()
         MemPool = manager.dict()
-        print(f"Manager started with UTXOS: {utxos} and MemPool: {MemPool}")  # Print the initial UTXOS and MemPool
+        print(f"Manager started with UTXOS: {utxos} and MemPool: {MemPool}\n")  # Print the initial UTXOS and MemPool
 
-        webapp = Process(target=main, args=(utxos, MemPool))
+        webapp = Process(target=main, args=(utxos, MemPool, webport))
         webapp.start()
 
+        """Start server and listen for requests"""
+        sync = sync_manager(localHost, localPort)
+        start_server = Process(target=sync.spinup)
+        start_server.start()
+
         blockchain = Blockchain(utxos, MemPool)
+        blockchain.startSync()
         blockchain.main()
     
