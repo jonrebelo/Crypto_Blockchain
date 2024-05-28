@@ -145,6 +145,52 @@ class Tx:
         
         return True
     
+    @classmethod
+    def to_obj(cls, item):
+        """
+    Class method to convert a dictionary representation of a transaction into a `Tx` object.
+
+    The method iterates over the 'tx_ins' and 'tx_outs' lists in the dictionary, converting each transaction input and output into a `Tx_In` and `Tx_Out` object respectively.
+
+    For each transaction input, the method creates a list of commands by iterating over the 'cmds' list in the 'script_sig' dictionary. 
+    If the 'prev_tx' value is a string of 64 zeroes, the command is converted from an integer to a little-endian byte string. 
+    Otherwise, if the command is an integer, it is appended as is, and if it's a hexadecimal string, it's converted to bytes and appended.
+
+    For each transaction output, the method creates a list of commands by iterating over the 'cmds' list in the 'script_pubkey' dictionary. 
+    If the command is an integer, it is appended as is, and if it's a hexadecimal string, it's converted to bytes and appended.
+
+    The method then creates a `Tx` object with the lists of `Tx_In` and `Tx_Out` objects and returns it.
+    """
+        TxInList = []
+        TxOutList = []
+        cmds = []
+
+        for tx_in in item['tx_ins']:
+            for cmd in tx_in['script_sig']['cmds']:
+               
+                if tx_in['prev_tx'] == "0000000000000000000000000000000000000000000000000000000000000000":
+                    cmds.append(int_to_little_endian(int(cmd), bytes_needed(int(cmd))))
+                else:
+                    if type(cmd) == int:
+                        cmds.append(cmd)
+                    else:
+                        cmds.append(bytes.fromhex(cmd))
+            TxInList.append(Tx_In(bytes.fromhex(tx_in['prev_tx']),tx_in['prev_index'],Script(cmds)))   
+
+        
+        cmdsout = []
+        for tx_out in item['tx_outs']:
+            for cmd in tx_out['script_pubkey']['cmds']:
+                if type(cmd) == int:
+                    cmdsout.append(cmd)
+                else:
+                    cmdsout.append(bytes.fromhex(cmd))
+                    
+            TxOutList.append(Tx_Out(tx_out['amount'],Script(cmdsout)))
+            cmdsout= []
+        
+        return cls(1, TxInList, TxOutList, 0)
+    
     
     def to_dict(self):
         """
