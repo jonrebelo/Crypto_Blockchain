@@ -1,21 +1,34 @@
 from Blockchain.Backend.core.blockheader import BlockHeader
-from Blockchain.Backend.util.util import int_to_little_endian, little_endian_to_int, encode_varint
+from Blockchain.Backend.util.util import int_to_little_endian, little_endian_to_int, encode_varint, read_varint
 from Blockchain.Backend.core.Tx import Tx
 
 class Block:
-    """ 
-    Where the transactions will be stored.
     """
-
+    Block is a storage containter that stores transactions
+    """
     command = b'block'
-    
-    def __init__ (self, Height, Blocksize, BlockHeader, TxCount, Txs):
+
+    def __init__(self, Height, Blocksize, BlockHeader, TxCount, Txs):
         self.Height = Height
         self.Blocksize = Blocksize
         self.BlockHeader = BlockHeader
-        self.TxCount = TxCount
+        self.Txcount = TxCount
         self.Txs = Txs
 
+    @classmethod
+    def parse(cls, s):
+        Height = little_endian_to_int(s.read(4))
+        BlockSize = little_endian_to_int(s.read(4))
+        blockHeader = BlockHeader.parse(s)
+        numTxs = read_varint(s)
+
+        Txs = []
+
+        for _ in range(numTxs):
+            Txs.append(Tx.parse(s))
+
+        return cls(Height, BlockSize, blockHeader, numTxs, Txs)
+        
     def serialize(self):
         result = int_to_little_endian(self.Height, 4)
         result += int_to_little_endian(self.Blocksize, 4)
@@ -25,12 +38,12 @@ class Block:
         for tx in self.Txs:
             result += tx.serialize()
         
-        return result     
+        return result 
 
     @classmethod
     def to_obj(cls, lastblock):
         block = BlockHeader(lastblock['BlockHeader']['version'],
-                    bytes.fromhex(lastblock['BlockHeader']['prev_block_hash']),
+                    bytes.fromhex(lastblock['BlockHeader']['prevBlockHash']),
                     bytes.fromhex(lastblock['BlockHeader']['merkleRoot']),
                     lastblock['BlockHeader']['timestamp'],
                     bytes.fromhex(lastblock['BlockHeader']['bits']))
@@ -43,3 +56,8 @@ class Block:
         
         block.BlockHash = bytes.fromhex(lastblock['BlockHeader']['blockHash'])
         return cls(lastblock['Height'], lastblock['Blocksize'], block, len(Transactions), Transactions)
+
+    def to_dict(self):
+        dt = self.__dict__
+        self.BlockHeader = self.BlockHeader.to_dict()
+        return dt

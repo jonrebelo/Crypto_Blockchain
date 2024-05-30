@@ -1,5 +1,5 @@
 import socket
-from Blockchain.Backend.core.network.network import network_envelope, FINISHED_SENDING
+from Blockchain.Backend.core.network.network import NetworkEnvelope, FINISHED_SENDING
 
 
 class Node:
@@ -9,7 +9,7 @@ class Node:
         self.ADDR = (self.host, self.port)
 
     """ Start the Server and bind it to a particular port Number """
-    def start_server(self):
+    def startServer(self):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind(self.ADDR)
         self.server.listen()
@@ -23,18 +23,18 @@ class Node:
         self.socket.connect((self.host, self.port))
         return self.socket
 
-    def accept_connection(self):
+    def acceptConnection(self):
         self.conn, self.addr = self.server.accept()
         self.stream = self.conn.makefile('rb', None)
         return self.conn, self.addr
 
-    def close_connection(self):
+    def closeConnection(self):
         self.socket.close()
 
     def send(self, message):
-        envelope = network_envelope(message.command, message.serialize())
+        envelope = NetworkEnvelope(message.command, message.serialize())
         self.socket.sendall(envelope.serialize())
     
     def read(self):
-        envelope = network_envelope.parse(self.stream)
+        envelope = NetworkEnvelope.parse(self.stream)
         return envelope

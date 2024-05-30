@@ -1,5 +1,5 @@
 import sys
-sys.path.append('F:/00_Github/Crypto_Blockchain')
+sys.path.append('F:/00_Github/Crypto_Blockchain_A1')
 from Blockchain.Backend.core.EllepticCurve.EllepticCurve import Sha256Point
 from Blockchain.Backend.util.util import hash160, hash256
 from Blockchain.Backend.core.database.database import AccountDB
@@ -10,68 +10,72 @@ import secrets
 
 class account:
     def createKeys(self):
-        #constants in our elliptical curve formula in hex
-        Gx = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
-        Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8
-        
-        """Create instance of the elliptical curve point class"""
+        """Secp256k1 Curve Generator Points"""
+        Gx = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798
+        Gy = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8
+
+        """Create an Instance of Class Sha256Point"""
         G = Sha256Point(Gx, Gy)
 
-        #generate a random private key
-        self.private_key = secrets.randbits(256)
+        """ Generate Secure Private Key """
+        self.privateKey = secrets.randbits(256)
 
-        #multiple private key by G to get public key
-        uncompressed_public_key = self.private_key * G
+        """ 
+         # Multiply Private Key with Generator Point
+         # Returns X-coordinate and Y-Coordinate 
+        """
+        unCompressesPublicKey = self.privateKey * G
+        xpoint = unCompressesPublicKey.x
+        ypoint = unCompressesPublicKey.y
 
-        #return x and y coordinates of the public key
-        x_point = uncompressed_public_key.x
-        y_point = uncompressed_public_key.y
-
-        #define the prefix of the public key. Written in bytes. big refers to "big endian" which writes the code from left to right. little would be the opposite. Then create public key
-        if y_point.num % 2 == 0:
-            compressed_key = b'\x02' + x_point.num.to_bytes(32, 'big')
+        """ Address Prefix for Odd or even value of YPoint """
+        if ypoint.num % 2 == 0:
+            compressesKey = b"\x02" + xpoint.num.to_bytes(32, "big")
         else:
-            compressed_key = b'\x03' + x_point.num.to_bytes(32, 'big')
+            compressesKey = b"\x03" + xpoint.num.to_bytes(32, "big")
 
-        #convert public key to public address
-        v_hash160 = hash160(compressed_key)
+        """ RIPEMD160 Hashing Algorithm returns the hash of Compressed Public Key"""
+        
+        hsh160 = hash160(compressesKey)
+
         """Prefix for Mainnet"""
-        main_prefix = b'\x00'
+        main_prefix = b"\x00"
 
-        new_address = main_prefix + v_hash160
+        newAddr = main_prefix + hsh160
 
-        #Verifying address is valid for sending transactions
-        """"Checksum"""
-        checksum = hash256(new_address)[:4]
+        """Checksum"""
+        checksum = hash256(newAddr)[:4]
 
-        new_address = new_address + checksum
+        newAddr = newAddr + checksum
+       
+        BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
-        BASE58_AlPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-
+        """Counter to find Leading zeros """
         count = 0
-
-        for c in new_address:
+        for c in newAddr:
             if c == 0:
-                count +=1
+                count += 1
             else:
                 break
-        num = int.from_bytes(new_address, 'big')
-        prefix = '1' * count
+        """ Convert to Numeric from Bytes """
+        num = int.from_bytes(newAddr, "big")
+        prefix = "1" * count
 
-        result = ''
+        result = ""
 
+        """ BASE58 Encoding """
         while num > 0:
-            #num gets divided by 58, so it's always less than 58
             num, mod = divmod(num, 58)
-            #assigns values from BASE58 until complete and assigns to result variable
-            result = BASE58_AlPHABET[mod] + result
+            result = BASE58_ALPHABET[mod] + result
 
-        self.public_address = prefix + result
+        self.PublicAddress = prefix + result
 
-        print(f"Private key is {self.private_key}")
-        print(f"Public Address is {self.public_address}")
+        print(f"Private Key {self.privateKey}")
+        print(f"Public Key {self.PublicAddress}")
+        print(f"Xpoint {xpoint} \n Ypoint {ypoint}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     acct = account()
     acct.createKeys()
     AccountDB().write([acct.__dict__])

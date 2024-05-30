@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for
-from Blockchain.client.send_crypto import send_crypto
+from Blockchain.client.send_crypto import SendBTC
 from Blockchain.Backend.core.Tx import Tx
-from Blockchain.Backend.core.database.database import BlockchainDB
+from Blockchain.Backend.core.database.database import BlockchainDB, NodeDB
 from Blockchain.Backend.util.util import encode_base58, decode_base58, sha256
+from Blockchain.Backend.core.network.sync_manager import syncManager
 from flask_qrcode import QRcode
+from multiprocessing import Process
+
 
 app = Flask(__name__)
 qrcode = QRcode(app)
@@ -118,6 +121,7 @@ def readDatabase():
 
 @app.route('/block')
 def block():
+    header = request.args.get('blockHeader')
     if request.args.get('blockHeader'):
         return redirect(url_for('showBlock', blockHeader=request.args.get('blockHeader')) )
     else:
@@ -162,38 +166,58 @@ def address(publicAddress):
     else:
         return "<h1> Invalid Identifier </h1>"
 
-@app.route("/wallet", methods=['GET', 'POST'])
+@app.route("/wallet", methods=["GET", "POST"])
 def wallet():
-    message = ''
-    if request.method == 'POST':
-        from_address = request.form.get('from_address')
-        to_address = request.form['to_address']
-        Amount = request.form.get("Amount", type = int)
-        send_coin = send_crypto(from_address, to_address, Amount, UTXOS)
-        tx_obj =  send_coin.prepare_transaction()
+    message = ""
+    if request.method == "POST":
+        FromAddress = request.form.get("fromAddress")
+        ToAddress = request.form.get("toAddress")
+        Amount = request.form.get("Amount", type=int)
+        sendCoin = SendBTC(FromAddress, ToAddress, Amount, UTXOS)
+        TxObj = sendCoin.prepareTransaction()
 
-        script_pub_key = send_coin.script_pub_key(from_address)
+        scriptPubKey = sendCoin.scriptPubKey(FromAddress)
         verified = True
 
-        #verify all transactions are valid before entering intot the mempool
-        if not tx_obj:
+        if not TxObj:
             message = "Invalid Transaction"
 
-        if isinstance(tx_obj, Tx):
-            for index, tx in enumerate(tx_obj.tx_ins):
-                if not tx_obj.verify_input(index, script_pub_key):
+        if isinstance(TxObj, Tx):
+            for index, tx in enumerate(TxObj.tx_ins):
+                if not TxObj.verify_input(index, scriptPubKey):
                     verified = False
-            
-            if verified:
-                MEMPOOL[tx_obj.TxId] = tx_obj
-                message = "Transaction added to mempool"
-                
-        
-    return render_template('wallet.html', message = message)
 
-def main(utxos, MemPool, port):
+            if verified:
+                MEMPOOL[TxObj.TxId] = TxObj
+                relayTxs = Process(target = broadcastTx, args = (TxObj, localHostPort)) 
+                relayTxs.start()
+                message = "Transaction added in memory Pool"
+
+    return render_template("wallet.html", message=message)
+
+def broadcastTx(TxObj, localHostPort = None):
+    try:
+        node = NodeDB()
+        portList = node.read()
+
+        for port in portList:
+            if localHostPort != port:
+                sync = syncManager('127.0.0.1', port)
+                try:
+                    sync.connectToHost(localHostPort - 1, port)
+                    sync.publishTx(TxObj)
+                
+                except Exception as err:
+                    pass
+                
+    except Exception as err:
+        pass
+
+def main(utxos, MemPool, port, localPort):
     global UTXOS
     global MEMPOOL
+    global localHostPort 
     UTXOS = utxos
     MEMPOOL = MemPool
+    localHostPort = localPort
     app.run(port = port)

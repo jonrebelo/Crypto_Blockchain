@@ -1,92 +1,116 @@
-from Blockchain.Backend.util.util import int_to_little_endian, encode_varint
+from Blockchain.Backend.util.util import int_to_little_endian, encode_varint, little_endian_to_int, read_varint
 from Blockchain.Backend.core.EllepticCurve.op import OP_CODE_FUNCTION
 class Script:
-    def __init__(self, cmds = None):
+    def __init__(self, cmds=None):
         if cmds is None:
             self.cmds = []
         else:
             self.cmds = cmds
 
     def __add__(self, other):
-        #override addition operation to add commands when script is added
         return Script(self.cmds + other.cmds)
 
-    
     def serialize(self):
-        #initialize what's being sent back
-        result = b''
-        #iterate through the commands
+        # initialize what we'll send back
+        result = b""
+        # go through each cmd
         for cmd in self.cmds:
-            #if the command is an integer, turn it into a byte
+            # if the cmd is an integer, it's an opcode
             if type(cmd) == int:
-                #convert integer to little endian
+                # turn the cmd into a single byte integer using int_to_little_endian
+                # result += int_to_little_endian(cmd, 1)
                 result += int_to_little_endian(cmd, 1)
             else:
-                #otherwise this is an element
-                #get length in bytes
+                # otherwise, this is an element
+                # get the length in bytes
                 length = len(cmd)
-                #if the length is less than 75, it's an element
+                # for large lengths, we have to use a pushdata opcode
                 if length < 75:
+                    # turn the length into a single byte integer
                     result += int_to_little_endian(length, 1)
-                elif length > 75 and length <0x100:
-                    #if the length is greater than 75, but less than 0x100, it's a 1 byte element
+                elif length > 75 and length < 0x100:
+                    # 76 is pushdata1
                     result += int_to_little_endian(76, 1)
                     result += int_to_little_endian(length, 1)
-                elif length >= 0x100 and length < 520:
-                    #if the length is greater than 0x100, but less than 520, it's a 2 byte element
+                elif length >= 0x100 and length <= 520:
+                    # 77 is pushdata2
                     result += int_to_little_endian(77, 1)
                     result += int_to_little_endian(length, 2)
                 else:
                     raise ValueError("too long an cmd")
-                
+
                 result += cmd
-
-        #get the length of the entire thing        
+        # get the length of the whole thing
         total = len(result)
-
-        #encode_varint the total length
+        # encode_varint the total length of the result and prepend
         return encode_varint(total) + result
 
-    def evaluate(self, z):
+    @classmethod
+    def parse(cls, s):
+        # get the length of the entire field
+        length = read_varint(s)
+        # initialize the cmds array
+        cmds = []
+        # initialize the number of bytes we've read to 0
+        count = 0
+        # loop until we've read length bytes
+        while count < length:
+            # get the current byte
+            current = s.read(1)
+            # increment the bytes we've read
+            count += 1
+            # convert the current byte to an integer
+            current_byte = current[0]
+            # if the current byte is between 1 and 75 inclusive
+            if current_byte >= 1 and current_byte <= 75:
+                # we have an cmd set n to be the current byte
+                n = current_byte
+                # add the next n bytes as an cmd
+                cmds.append(s.read(n))
+                # increase the count by n
+                count += n
+            elif current_byte == 76:
+                # op_pushdata1
+                data_length = little_endian_to_int(s.read(1))
+                cmds.append(s.read(data_length))
+                count += data_length + 1
+            elif current_byte == 77:
+                # op_pushdata2
+                data_length = little_endian_to_int(s.read(2))
+                cmds.append(s.read(data_length))
+                count += data_length + 2
+            else:
+                # we have an opcode. set the current byte to op_code
+                op_code = current_byte
+                # add the op_code to the list of cmds
+                cmds.append(op_code)
+        if count != length:
+            raise SyntaxError('parsing script failed')
+        return cls(cmds)
 
-        """This function evaluates a list of commands (self.cmds) using a stack-based approach. 
-    It iterates over the commands, and for each command, it performs an operation based on its type.
-    Parameters:
-    z: A hash used in the op_checksig operation.
-    Returns:
-    None. However, it prints an error message and returns False if an operation fails."""
-
     def evaluate(self, z):
-        # Copy the list of commands
         cmds = self.cmds[:]
-        # Initialize an empty stack
         stack = []
 
-        # Iterate over the commands while there are commands left
         while len(cmds) > 0:
-            # Pop the first command from the list
             cmd = cmds.pop(0)
-            # If the command is an integer, it's an operation code
+
             if type(cmd) == int:
-                # Get the corresponding operation function from the OP_CODE_FUNCTION dictionary
                 operation = OP_CODE_FUNCTION[cmd]
-                # If the operation code is 172 (op_checksig), perform the operation with the stack and z as arguments
+
                 if cmd == 172:
                     if not operation(stack, z):
                         print(f"Error in Signature Verification")
                         return False
-                    # For other operation codes, perform the operation with the stack as the argument
+
                 elif not operation(stack):
                     print(f"Error in Signature Verification")
                     return False
-                # If the command is not an integer, it's a value to be pushed onto the stack
             else:
                 stack.append(cmd)
         return True
 
     @classmethod
     def p2pkh_script(cls, h160):
-        """
-        Takes hash160 and returns the p2pkh Script_Pubkey.
-        """
-        return Script([0x76, 0xa9, h160, 0x88, 0xac])
+        """Takes a hash160 and returns the p2pkh ScriptPubKey"""
+        return Script([0x76, 0xA9, h160, 0x88, 0xAC])
