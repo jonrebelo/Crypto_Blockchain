@@ -4,11 +4,14 @@ from Blockchain.Backend.core.Tx import Tx
 
 class Block:
     """
-    Block is a storage containter that stores transactions
+    Block is a storage container that stores transactions. It represents a block in a blockchain.
     """
     command = b'block'
 
     def __init__(self, Height, Blocksize, BlockHeader, TxCount, Txs):
+        """
+        Initialize a Block instance with height, block size, block header, transaction count, and transactions.
+        """
         self.Height = Height
         self.Blocksize = Blocksize
         self.BlockHeader = BlockHeader
@@ -17,6 +20,9 @@ class Block:
 
     @classmethod
     def parse(cls, s):
+        """
+        Parse a stream of bytes into a Block instance.
+        """
         Height = little_endian_to_int(s.read(4))
         BlockSize = little_endian_to_int(s.read(4))
         blockHeader = BlockHeader.parse(s)
@@ -30,6 +36,9 @@ class Block:
         return cls(Height, BlockSize, blockHeader, numTxs, Txs)
         
     def serialize(self):
+        """
+        Serialize the Block instance into a stream of bytes.
+        """
         result = int_to_little_endian(self.Height, 4)
         result += int_to_little_endian(self.Blocksize, 4)
         result += self.BlockHeader.serialize()
@@ -42,6 +51,9 @@ class Block:
 
     @classmethod
     def to_obj(cls, lastblock):
+        """
+        Convert the Block instance into a dictionary representation.
+        """
         block = BlockHeader(lastblock['BlockHeader']['version'],
                     bytes.fromhex(lastblock['BlockHeader']['prevBlockHash']),
                     bytes.fromhex(lastblock['BlockHeader']['merkleRoot']),
