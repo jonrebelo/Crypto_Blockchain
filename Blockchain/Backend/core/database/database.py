@@ -8,8 +8,8 @@ class BaseDB:
 
     def read(self):
         if not os.path.exists(self.filepath):
-            print(f"File {self.filepath} not available")
-            return False
+            print(f"File {self.filepath} not available. Creating it.")
+            open(self.filepath, 'a').close()
 
         with open(self.filepath, "r") as file:
             raw = file.readline()
