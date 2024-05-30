@@ -9,11 +9,11 @@ from Blockchain.Backend.util.util import little_endian_to_int
 
 
 class syncManager:
-    def __init__(self, host, port, newBlockAvailable = None, secondryChain = None, Mempool = None):
+    def __init__(self, host, port, newBlockAvailable = None, secondaryChain = None, Mempool = None):
         self.host = host
         self.port = port 
         self.newBlockAvailable = newBlockAvailable
-        self.secondryChain = secondryChain
+        self.secondaryChain = secondaryChain
         self.Mempool = Mempool
 
     def spinUpTheServer(self):
@@ -72,7 +72,7 @@ class syncManager:
 
         try:
             self.sendBlock(blocksToSend)
-            self.sendSecondryChain()
+            self.sendsecondaryChain()
             self.sendPortlist()
             self.sendFinishedMessage()
         except Exception as e:
@@ -86,8 +86,8 @@ class syncManager:
         envelope = NetworkEnvelope(portLst.command, portLst.serialize())
         self.conn.sendall(envelope.serialize())
 
-    def sendSecondryChain(self):
-        TempSecChain = dict(self.secondryChain)
+    def sendsecondaryChain(self):
+        TempSecChain = dict(self.secondaryChain)
         
         for blockHash in TempSecChain:
             envelope = NetworkEnvelope(TempSecChain[blockHash].command, TempSecChain[blockHash].serialize())
@@ -195,7 +195,7 @@ class syncManager:
                     BlockchainDB().write([blockObj.to_dict()])
                     print(f"Block Received - {blockObj.Height}")
                 else:
-                    self.secondryChain[BlockHeaderObj.generateBlockHash()] = blockObj
+                    self.secondaryChain[BlockHeaderObj.generateBlockHash()] = blockObj
 
 
 
