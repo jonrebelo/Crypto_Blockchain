@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% block title %} Block Details {% endblock %} {% block
+{% extends 'base.html' %} {% block title %} Block Details{% endblock %} {% block
     content%}
     
     <h1 class="BlockNumber">BLOCK #{{ block['Height']}}</h1>
@@ -21,18 +21,18 @@
     
         {% if (block['Height']) == 0 %}
         <div class="TxItemDetail PrevBlockHash">
-          {{block['BlockHeader']['prev_block_hash']}} (GENESIS BLOCK)
+          {{block['BlockHeader']['prevBlockHash']}} (GENESIS BLOCK)
         </div>
         {% else %}
         <div class="TxItemDetail PrevBlockHash">
           <a
-            href="{{ url_for('block', blockHeader=block['BlockHeader']['prev_block_hash']) }}"
-            >{{block['BlockHeader']['prev_block_hash']}}
+            href="{{ url_for('block', blockHeader=block['BlockHeader']['prevBlockHash']) }}"
+            >{{block['BlockHeader']['prevBlockHash']}}
           </a>
         </div>
         {% endif %}
     
-        <div class="TxItemDetail TotalTxs">{{block['TxCount']}}</div>
+        <div class="TxItemDetail TotalTxs">{{block['Txcount']}}</div>
         <div class="TxItemDetail BlockSize">{{ block['Blocksize']}}</div>
         <div class="TxItemDetail MerkleRoot">
           {{block['BlockHeader']['merkleRoot']}}
@@ -77,17 +77,15 @@
     
         <div class="Txoutput">
           {% set h160hash = bytes.fromhex(tx_out['script_pubkey']['cmds'][2]) %} 
-          {%set new_address = main_prefix + h160hash %} 
-          {% set checksum =sha256(sha256(new_address).digest()).digest()[:4] %} 
-          {% set new_address =new_address + checksum %} {% set pubAddress = encode_base58(new_address) %} 
-          {% set TotaAmount = TotaAmount + tx_out['amount'] %} 
-          {% if (tx_out['amount']%100000000) == 0 %} 
-          {% set amount =(tx_out['amount']/100000000)|int %} 
-          {% else %} 
-          {% set amount =(tx_out['amount']/100000000) %} 
-          {% endif %}
+          {%set newAddr = main_prefix + h160hash %} {% set checksum =
+          sha256(sha256(newAddr).digest()).digest()[:4] %} {% set newAddr =newAddr +
+          checksum %} {% set pubAddress = encode_base58(newAddr) %} {% set
+          TotaAmount = TotaAmount + tx_out['amount'] %} {% if
+          (tx_out['amount']%100000000) == 0 %} {% set amount =
+          (tx_out['amount']/100000000)|int %} {% else %} {% set amount =
+          (tx_out['amount']/100000000) %} {% endif %}
           <a href="{{ url_for('address', publicAddress = pubAddress) }}">
-            #{{ loop.index0 }} {{ pubAddress }} : {{ amount }} Units</a
+            #{{ loop.index0 }} {{ pubAddress }} : {{ amount }} BTC</a
           >
         </div>
         {% endfor %}
