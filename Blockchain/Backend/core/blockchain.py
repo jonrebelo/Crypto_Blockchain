@@ -15,6 +15,7 @@ from Blockchain.client.autoBroadcastTX import autoBroadcast
 
 
 
+
 #create the first hash for genesis block
 ZERO_HASH = "0" * 64
 VERSION = 1
@@ -398,7 +399,7 @@ class Blockchain:
 
         # Calculate the merkle root of the transactions
         merkleRoot = merkle_root(self.TxIds)[::-1].hex()
-        #Target difficulty currently doesn't work on empty blockchain
+        # Adjust the target difficulty
         self.adjustTargetDifficulty(BlockHeight)
         # Create a new block header
         blockheader = BlockHeader(
@@ -469,7 +470,7 @@ class Blockchain:
             self.addBlock(BlockHeight, prevBlockHash)
             
 if __name__ == "__main__":
-    
+
     # Read the configuration file
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -493,7 +494,7 @@ if __name__ == "__main__":
         sync = syncManager(localHost, localHostPort, newBlockAvailable, secondaryChain, MemPool)
         startServer = Process(target = sync.spinUpTheServer)
         startServer.start()
-
+    
         # Create a blockchain and start the synchronization process
         blockchain = Blockchain(utxos, MemPool, newBlockAvailable, secondaryChain)
         blockchain.startSync()
