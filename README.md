@@ -1,6 +1,8 @@
 # Cryptocurrency Blockchain
 
-This project is a cryptocurrency blockchain, similar to Bitcoin, implemented using the SHA256 algorithm. 
+This project is a cryptocurrency blockchain, similar to Bitcoin, implemented using the SHA256 algorithm.
+
+![Image description](./Interface_Screenshot/script.png)
 
 ## Features
 
@@ -8,6 +10,8 @@ This project is a cryptocurrency blockchain, similar to Bitcoin, implemented usi
 - **Proof of Work (PoW) Mining**: The blockchain implements a PoW algorithm for mining new blocks.
 - **Public Nodes**: The network consists of public nodes that participate in the blockchain.
 - **Flask User Interface**: A Flask application is used as a user interface for sending and receiving transactions.
+
+![Image description](./Charts/Block_Screenshot.png)
 
 ## Acknowledgments
 
@@ -255,11 +259,17 @@ Combined script: [Signature] [PublicKey] OP_DUP OP_HASH160 [PublicKeyHash] OP_EQ
 
 Execute Commands:
 Push Signature: [Signature] is pushed onto the stack.
+
 Push PublicKey: [PublicKey] is pushed onto the stack.
+
 OP_DUP: Duplicates the top item. Stack: [PublicKey, PublicKey]
+
 OP_HASH160: Hashes the top item. Stack: [PublicKey, PublicKeyHash]
+
 Push PublicKeyHash: [PublicKeyHash] from the scriptPubKey is pushed onto the stack.
+
 OP_EQUALVERIFY: Compares the top two items for equality and removes them if they are equal. If not equal, the script fails. Stack: [PublicKey]
+
 OP_CHECKSIG: Verifies the signature against the public key and the transaction data. If valid, pushes 1 onto the stack. Stack: [1]
 
 Final Stack Check:
