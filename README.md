@@ -258,6 +258,7 @@ Nodes in the network reach a consensus on the validity of transactions and block
 Combined script: [Signature] [PublicKey] OP_DUP OP_HASH160 [PublicKeyHash] OP_EQUALVERIFY OP_CHECKSIG
 
  - Execute Commands:
+ - 
 a. Push Signature: [Signature] is pushed onto the stack.
 
 b. Push PublicKey: [PublicKey] is pushed onto the stack.
