@@ -1,6 +1,8 @@
 # Cryptocurrency Blockchain
 
-This project is a cryptocurrency blockchain, similar to Bitcoin, implemented using the SHA256 algorithm. 
+This project is a cryptocurrency blockchain, similar to Bitcoin, implemented using the SHA256 algorithm.
+
+![Image description](./Interface_Screenshot/script.png)
 
 ## Features
 
@@ -8,6 +10,8 @@ This project is a cryptocurrency blockchain, similar to Bitcoin, implemented usi
 - **Proof of Work (PoW) Mining**: The blockchain implements a PoW algorithm for mining new blocks.
 - **Public Nodes**: The network consists of public nodes that participate in the blockchain.
 - **Flask User Interface**: A Flask application is used as a user interface for sending and receiving transactions.
+
+![Image description](./Charts/Block_Screenshot.png)
 
 ## Acknowledgments
 
