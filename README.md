@@ -39,7 +39,7 @@ pip install flask-qrcode
 ```
 ### Instructions
 
-1. Run blockchain.py
+1. With environment activated run blockchain.py
 2. A flask server will spinup at 127.0.0.1:5900 (This can be changed in the config.ini if desired)
 3. Mining will begin 
 4. Navigate to 127.0.0.1:5900 in your browser to launch block explorer.
