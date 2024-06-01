@@ -2,7 +2,7 @@
 
 This project is a cryptocurrency blockchain, similar to Bitcoin, implemented using the SHA256 algorithm.
 
-![Image description](./Interface_Screenshot/script.png)
+![Image description](./Interface_Screenshot/.png)
 
 ## Features
 
