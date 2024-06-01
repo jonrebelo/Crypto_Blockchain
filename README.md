@@ -2,7 +2,7 @@
 
 This project is a cryptocurrency blockchain, similar to Bitcoin, implemented using the SHA256 algorithm.
 
-![Image description](./Interface_Screenshot/.png)
+![Image description](./Charts/Interface_Screenshot.png)
 
 ## Features
 
@@ -11,7 +11,7 @@ This project is a cryptocurrency blockchain, similar to Bitcoin, implemented usi
 - **Public Nodes**: The network consists of public nodes that participate in the blockchain.
 - **Flask User Interface**: A Flask application is used as a user interface for sending and receiving transactions.
 
-![Image description](./Charts/Block_Screenshot.png)
+![Image description](./Charts/Block_screenshot.png)
 
 ## Acknowledgments
 
