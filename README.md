@@ -198,89 +198,73 @@ At a high level, the process of processing transactions in a blockchain involves
 5. Transaction Verification Flow:
 
 Transaction Creation:
-    Input: The transaction references previous outputs that the sender wants to spend. Each input includes a reference to a previous transaction output and an unlocking script (scriptSig) that will be used to prove ownership.
+Input: The transaction references previous outputs that the sender wants to spend. Each input includes a reference to a previous transaction output and an unlocking script (scriptSig) that will be used to prove ownership.
 
-    Output: Specifies the destination address and the amount of Bitcoin to be transferred. Each output includes a locking script (scriptPubKey) that sets the conditions under which the output can be spent.
+Output: Specifies the destination address and the amount of Bitcoin to be transferred. Each output includes a locking script (scriptPubKey) that sets the conditions under which the output can be spent.
 
 Broadcasting:
-
-    The created transaction is broadcast to the Bitcoin network. This means it is sent to nodes in the network, which then relay it further.
+The created transaction is broadcast to the Bitcoin network. This means it is sent to nodes in the network, which then relay it further.
 
 Verification by Nodes:
-
-    Nodes in the network verify the transaction before it is included in a block. This involves several checks, including signature verification and ensuring that the referenced outputs have not already been spent.
+Nodes in the network verify the transaction before it is included in a block. This involves several checks, including signature verification and ensuring that the referenced outputs have not already been spent.
 
 Script Execution:
+When a transaction is being verified, the script system plays a crucial role. Here’s a step-by-step breakdown:
 
-    When a transaction is being verified, the script system plays a crucial role. Here’s a step-by-step breakdown:
+a. Combining Scripts:
+- The unlocking script (scriptSig) from the transaction input and the locking script (scriptPubKey) from the referenced output are combined.
+- The combined script is then executed by the Bitcoin Script engine.
 
-        a. Combining Scripts:
+b. Stack-Based Evaluation:
+- The script is executed in a stack-based manner, where commands (opcodes) are processed one by one.
+- Data items and intermediate results are pushed to and popped from the stack.
 
-        - The unlocking script (scriptSig) from the transaction input and the locking script (scriptPubKey) from the referenced output are combined.
-
-        - The combined script is then executed by the Bitcoin Script engine.
-
-        b. Stack-Based Evaluation:
-        - The script is executed in a stack-based manner, where commands (opcodes) are processed one by one.
-
-        - Data items and intermediate results are pushed to and popped from the stack.
-
-        c. Execution Flow:
-        - Parsing: Each command in the script is parsed. If the command is an integer, it’s treated as an opcode and the corresponding operation is executed.
-
-        - Operations: Depending on the opcode, various operations are performed, such as duplicating the top stack item (OP_DUP), hashing the top item (OP_HASH160), comparing items (OP_EQUAL), and verifying signatures (OP_CHECKSIG).
-
-        - Error Handling: If any operation fails (e.g., insufficient items on the stack, signature verification fails), the script execution is halted, and the transaction is deemed invalid.
+c. Execution Flow:
+- Parsing: Each command in the script is parsed. If the command is an integer, it’s treated as an opcode and the corresponding operation is executed.
+- Operations: Depending on the opcode, various operations are performed, such as duplicating the top stack item (OP_DUP), hashing the top item (OP_HASH160), comparing items (OP_EQUAL), and verifying signatures (OP_CHECKSIG).
+- Error Handling: If any operation fails (e.g., insufficient items on the stack, signature verification fails), the script execution is halted, and the transaction is deemed invalid.
 
 Signature Verification:
+OP_CHECKSIG: This operation is crucial for validating that the person spending the funds has the right to do so. It verifies that the signature provided in the unlocking script matches the public key and the transaction data.
 
-    OP_CHECKSIG: This operation is crucial for validating that the person spending the funds has the right to do so. It verifies that the signature provided in the unlocking script matches the public key and the transaction data.
-
-    Verification Process: The public key and the signature are popped from the stack. The signature is checked against the transaction hash using the public key. If the verification passes, 1 is pushed onto the stack; otherwise, 0 is pushed.
+Verification Process: The public key and the signature are popped from the stack. The signature is checked against the transaction hash using the public key. If the verification passes, 1 is pushed onto the stack; otherwise, 0 is pushed.
 
 Validation Outcome:
+After all commands have been processed, the stack should have a single item: 1 (true). This indicates that the script execution was successful, and thus the transaction is valid.
 
-    After all commands have been processed, the stack should have a single item: 1 (true). This indicates that the script execution was successful, and thus the transaction is valid.
-
-    If the stack is empty or the top item is 0 (false), the transaction is invalid.
+If the stack is empty or the top item is 0 (false), the transaction is invalid.
 
 Inclusion in a Block:
-
-    If the transaction is valid, it gets included in a block by a miner.
-    The block is then added to the blockchain, and the transaction is considered confirmed.
+If the transaction is valid, it gets included in a block by a miner.
+The block is then added to the blockchain, and the transaction is considered confirmed.
 
 Consensus:
-
-    Nodes in the network reach a consensus on the validity of transactions and blocks. A valid transaction must be accepted by a majority of nodes and eventually included in a block that becomes part of the longest chain in the blockchain.
+Nodes in the network reach a consensus on the validity of transactions and blocks. A valid transaction must be accepted by a majority of nodes and eventually included in a block that becomes part of the longest chain in the blockchain.
 
 ![Image description](./Charts/script.png)
 
 6. Script Execution Flow:
+scriptSig (Unlocking Script): This is provided by the spender. Example: [Signature] [PublicKey]
 
-    scriptSig (Unlocking Script): This is provided by the spender. Example: [Signature] [PublicKey]
-
-    scriptPubKey (Locking Script): This is specified in the output being spent. Example: OP_DUP OP_HASH160 [PublicKeyHash] OP_EQUALVERIFY OP_CHECKSIG
+scriptPubKey (Locking Script): This is specified in the output being spent. Example: OP_DUP OP_HASH160 [PublicKeyHash] OP_EQUALVERIFY OP_CHECKSIG
 
 When verifying the transaction, these scripts are combined and executed as follows:
 
 Combine Scripts:
-
-    Combined script: [Signature] [PublicKey] OP_DUP OP_HASH160 [PublicKeyHash] OP_EQUALVERIFY OP_CHECKSIG
+Combined script: [Signature] [PublicKey] OP_DUP OP_HASH160 [PublicKeyHash] OP_EQUALVERIFY OP_CHECKSIG
 
 Execute Commands:
-
-    Push Signature: [Signature] is pushed onto the stack.
-    Push PublicKey: [PublicKey] is pushed onto the stack.
-    OP_DUP: Duplicates the top item. Stack: [PublicKey, PublicKey]
-    OP_HASH160: Hashes the top item. Stack: [PublicKey, PublicKeyHash]
-    Push PublicKeyHash: [PublicKeyHash] from the scriptPubKey is pushed onto the stack.
-    OP_EQUALVERIFY: Compares the top two items for equality and removes them if they are equal. If not equal, the script fails. Stack: [PublicKey]
-    OP_CHECKSIG: Verifies the signature against the public key and the transaction data. If valid, pushes 1 onto the stack. Stack: [1]
+Push Signature: [Signature] is pushed onto the stack.
+Push PublicKey: [PublicKey] is pushed onto the stack.
+OP_DUP: Duplicates the top item. Stack: [PublicKey, PublicKey]
+OP_HASH160: Hashes the top item. Stack: [PublicKey, PublicKeyHash]
+Push PublicKeyHash: [PublicKeyHash] from the scriptPubKey is pushed onto the stack.
+OP_EQUALVERIFY: Compares the top two items for equality and removes them if they are equal. If not equal, the script fails. Stack: [PublicKey]
+OP_CHECKSIG: Verifies the signature against the public key and the transaction data. If valid, pushes 1 onto the stack. Stack: [1]
 
 Final Stack Check:
-
-    If the final stack has 1 on top, the transaction is valid.
-    If the final stack is empty or the top item is 0, the transaction is invalid.
+If the final stack has 1 on top, the transaction is valid.
+If the final stack is empty or the top item is 0, the transaction is invalid.
 
 This process ensures that only the rightful owner of the funds (i.e., the one who can provide the correct signature) can spend them.
 
