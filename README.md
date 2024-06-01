@@ -254,16 +254,26 @@ Combine Scripts:
 Combined script: [Signature] [PublicKey] OP_DUP OP_HASH160 [PublicKeyHash] OP_EQUALVERIFY OP_CHECKSIG
 
 Execute Commands:
-Push Signature: [Signature] is pushed onto the stack.
-Push PublicKey: [PublicKey] is pushed onto the stack.
-OP_DUP: Duplicates the top item. Stack: [PublicKey, PublicKey]
-OP_HASH160: Hashes the top item. Stack: [PublicKey, PublicKeyHash]
-Push PublicKeyHash: [PublicKeyHash] from the scriptPubKey is pushed onto the stack.
-OP_EQUALVERIFY: Compares the top two items for equality and removes them if they are equal. If not equal, the script fails. Stack: [PublicKey]
-OP_CHECKSIG: Verifies the signature against the public key and the transaction data. If valid, pushes 1 onto the stack. Stack: [1]
+
+ - Push Signature: [Signature] is pushed onto the stack.
+
+ - Push PublicKey: [PublicKey] is pushed onto the stack.
+
+ - OP_DUP: Duplicates the top item. Stack: [PublicKey, PublicKey]
+
+ - OP_HASH160: Hashes the top item. Stack: [PublicKey, PublicKeyHash]
+
+ - Push PublicKeyHash: [PublicKeyHash] from the scriptPubKey is pushed onto the stack.
+
+ - OP_EQUALVERIFY: Compares the top two items for equality and removes them if they are equal. If not equal, the script fails. Stack: [PublicKey]
+
+ - OP_CHECKSIG: Verifies the signature against the public key and the transaction data. If valid, pushes 1 onto the stack. Stack: [1]
+
 
 Final Stack Check:
+
 If the final stack has 1 on top, the transaction is valid.
+
 If the final stack is empty or the top item is 0, the transaction is invalid.
 
 This process ensures that only the rightful owner of the funds (i.e., the one who can provide the correct signature) can spend them.
